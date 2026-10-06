@@ -1,183 +1,869 @@
-<div class="app-container">
-  <!-- Header -->
-  <header class="header">
+<div class="command-center-layout">
+  <!-- Side Navigation Bar -->
+  <aside class="sidebar">
     <div class="brand">
-      <span class="icon">🛡️</span>
-      <div>
-        <h1>TicketIQ</h1>
-        <p class="tagline">Evidence-Gated IT Support Copilot</p>
+      <img class="brand-logo" src="brand/project-logo-dark.svg" alt="TicketIQ logo" />
+      <div class="brand-text">
+        <span class="brand-title">TicketIQ</span>
+        <span class="brand-subtitle">{{ t('brand.sub') }}</span>
       </div>
     </div>
-    <div class="header-right">
-      <button class="btn-secondary" (click)="showIntelligence = !showIntelligence">
-        💡 {{ showIntelligence ? 'Hide Knowledge Intelligence' : 'Knowledge Intelligence (Bonus)' }}
-      </button>
-      <div class="badge-status">
-        <span class="pulse"></span> System Operational
-      </div>
-    </div>
-  </header>
 
-  <!-- Knowledge Intelligence Panel (Bonus Feature) -->
-  <div *ngIf="showIntelligence" class="intelligence-panel card">
-    <h3>🧠 Continuous Knowledge Improvement Engine</h3>
-    <p class="subtext">Identifies recurring patterns among unmatched tickets and recommends new Knowledge Base articles.</p>
-    
-    <div *ngIf="knowledgeGaps.length === 0" class="empty-state-sm">
-      Analyzing incident clusters...
-    </div>
-
-    <div class="gap-grid">
-      <div *ngFor="let gap of knowledgeGaps" class="gap-card">
-        <div class="gap-badge">🚨 Proposed Article Topic</div>
-        <h4>{{ gap.proposedTopic }}</h4>
-        <p><strong>Keyword Pattern:</strong> <span class="tag-keyword">{{ gap.patternKeyword }}</span></p>
-        <p class="gap-rec">{{ gap.recommendation }}</p>
-        <span class="gap-count">Triggered by {{ gap.affectedTicketCount }} unmatched incidents</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content Grid -->
-  <div class="grid-layout">
-    <!-- Left Column: Input Form -->
-    <div class="card input-card">
-      <h2>📥 Paste IT Ticket</h2>
-      
-      <div class="sample-buttons">
-        <button type="button" class="btn-sample" (click)="loadSampleTicket('payroll')">Payroll Auth Error</button>
-        <button type="button" class="btn-sample" (click)="loadSampleTicket('vpn')">VPN Timeout</button>
-        <button type="button" class="btn-sample" (click)="loadSampleTicket('unmatched')">Unmatched Query</button>
-      </div>
-
-      <div class="form-group">
-        <label>Ticket Description (Raw Unstructured Text):</label>
-        <textarea [(ngModel)]="ticketInput" rows="6" placeholder="Paste ticket description here..."></textarea>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group flex-1">
-          <label>Application Name:</label>
-          <input type="text" [(ngModel)]="applicationName" placeholder="e.g. Payroll Portal">
-        </div>
-        <div class="form-group flex-1">
-          <label>Confidence Threshold: {{ confidenceThreshold }}</label>
-          <input type="range" min="0.1" max="0.9" step="0.05" [(ngModel)]="confidenceThreshold">
-        </div>
-      </div>
-
-      <button class="btn-primary" [disabled]="loading" (click)="analyzeTicket()">
-        <span *ngIf="!loading">🔍 Analyze Ticket & Retrieve Resolution</span>
-        <span *ngIf="loading">⚡ Processing & Redacting PII...</span>
+    <nav class="nav-menu">
+      <button class="nav-item" [class.active]="activeTab === 'workspace'" (click)="setTab('workspace')">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label">{{ t('nav.cockpit') }}</span>
+        <span class="nav-badge pulse-badge" *ngIf="ticketStatus === 'ANALYZED'">Active</span>
       </button>
 
-      <div *ngIf="errorMessage" class="alert alert-error">
-        ⚠️ {{ errorMessage }}
+      <button class="nav-item" [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">{{ t('nav.overview') }}</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'knowledge-base'" (click)="setTab('knowledge-base')">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">{{ t('nav.kb') }}</span>
+        <span class="nav-count">{{ knowledgeCatalog.length }}</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'duplicates'" (click)="setTab('duplicates')">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-label">{{ t('nav.dups') }}</span>
+        <span class="nav-count" *ngIf="duplicates.length > 0">{{ duplicates.length }}</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'gaps'" (click)="setTab('gaps')">
+        <span class="nav-icon">💡</span>
+        <span class="nav-label">{{ t('nav.gaps') }}</span>
+        <span class="nav-badge badge-amber">{{ knowledgeGaps.length }}</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'evaluation'" (click)="setTab('evaluation')">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">{{ t('nav.eval') }}</span>
+        <span class="nav-badge badge-green">100%</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'batch'" (click)="setTab('batch')">
+        <span class="nav-icon">📂</span>
+        <span class="nav-label">{{ t('nav.batch') }}</span>
+        <span class="nav-badge badge-amber" *ngIf="batchResults.length > 0">{{ batchResults.length }}</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="system-status">
+        <span class="status-dot"></span>
+        <span>{{ t('status.active') }}</span>
+      </div>
+      <small class="version-tag">TicketIQ v2.0 · TCS Hackathon</small>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Top Bar with Clerk Authentication -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <h2 *ngIf="activeTab === 'workspace'">{{ t('title.cockpit') }}</h2>
+        <h2 *ngIf="activeTab === 'dashboard'">{{ t('title.dashboard') }}</h2>
+        <h2 *ngIf="activeTab === 'knowledge-base'">{{ t('title.kb') }}</h2>
+        <h2 *ngIf="activeTab === 'duplicates'">{{ t('title.dups') }}</h2>
+        <h2 *ngIf="activeTab === 'gaps'">{{ t('title.gaps') }}</h2>
+        <h2 *ngIf="activeTab === 'evaluation'">{{ t('title.eval') }}</h2>
+        <h2 *ngIf="activeTab === 'batch'">{{ t('title.batch') }}</h2>
       </div>
 
-      <!-- Duplicate Detection Warning (Bonus Feature) -->
-      <div *ngIf="duplicates.length > 0" class="duplicate-box">
-        <h4>⚠️ Potential Duplicate Tickets Detected</h4>
-        <div *ngFor="let dup of duplicates" class="dup-item">
-          <div class="dup-header">
-            <strong>{{ dup.ticketId }}</strong>: {{ dup.title }}
-            <span class="dup-score">{{ dup.similarityScore * 100 }}% Match</span>
+      <div class="topbar-actions">
+        <!-- Language selector: English · हिन्दी · தமிழ் -->
+        <div class="lang-selector" role="group" aria-label="Interface language">
+          <button
+            *ngFor="let l of supportedLanguages"
+            class="lang-btn"
+            [class.active]="uiLanguage() === l.code"
+            [title]="l.name"
+            (click)="uiLanguage.set(l.code)">
+            {{ l.native }}
+          </button>
+        </div>
+
+        <div class="shield-badge">
+          <span>{{ t('shield') }}</span>
+        </div>
+
+        <!-- Clerk Auth Component Integration -->
+        <div class="auth-section">
+          <!-- When user is logged in via Clerk -->
+          <div *ngIf="clerkUser" class="user-profile logged-in">
+            <span class="user-avatar">👤</span>
+            <span class="user-name" (click)="openClerkUserProfile()">{{ clerkUser.primaryEmailAddress || clerkUser.username || 'Analyst' }}</span>
+            <button class="btn-auth-sm" (click)="clerkSignOut()">{{ t('auth.signOut') }}</button>
           </div>
-          <small>Status: {{ dup.status }}</small>
+
+          <!-- When not logged in -->
+          <div *ngIf="!clerkUser" class="user-profile not-logged-in">
+            <button class="btn-clerk-login" (click)="openClerkSignIn()">
+              {{ t('auth.signIn') }}
+            </button>
+          </div>
         </div>
       </div>
+    </header>
+
+    <!-- Global Toast / Action Alert -->
+    <div *ngIf="actionMessage" class="action-alert">
+      {{ actionMessage }}
     </div>
 
-    <!-- Right Column: Results & Grounding -->
-    <div class="card results-card">
-      <div class="results-header">
-        <h2>🎯 Decision & Evidence Grounding</h2>
-        <span class="status-pill status-{{ ticketStatus.toLowerCase() }}">{{ ticketStatus }}</span>
-      </div>
-
-      <div *ngIf="actionMessage" class="action-alert">
-        {{ actionMessage }}
-      </div>
-
-      <div *ngIf="!analysisResult && !loading" class="empty-state">
-        <span>📋</span>
-        <p>Paste a ticket on the left and click <strong>Analyze</strong> to view predicted category, PII redactions, and source-grounded resolution steps.</p>
-      </div>
-
-      <div *ngIf="analysisResult" class="results-content">
-        <!-- Decision Banner -->
-        <div class="decision-banner" [ngClass]="{'banner-allowed': analysisResult.decision === 'DRAFT_ALLOWED', 'banner-nomatch': analysisResult.decision === 'NO_RELIABLE_MATCH'}">
-          <span class="decision-icon">{{ analysisResult.decision === 'DRAFT_ALLOWED' ? '✅' : '🚫' }}</span>
-          <div>
-            <h3>Status: {{ analysisResult.decision }}</h3>
-            <p *ngIf="analysisResult.decision === 'DRAFT_ALLOWED'">Evidence confidence meets threshold ({{ analysisResult.confidence.finalScore * 100 }}%).</p>
-            <p *ngIf="analysisResult.decision === 'NO_RELIABLE_MATCH'">No reliable knowledge base article matched the criteria. Refusing to invent fix.</p>
-          </div>
+    <!-- TAB 1: TICKET WORKSPACE / COCKPIT -->
+    <div *ngIf="activeTab === 'workspace'" class="workspace-view">
+      <!-- 3D hero band -->
+      <section class="hero-band" aria-label="TicketIQ command center">
+        <app-cube-wave class="hero-canvas" [grid]="14" [gap]="0.78" [speed]="0.9"></app-cube-wave>
+        <div class="hero-overlay"></div>
+        <div class="hero-copy">
+          <span class="hero-eyebrow">{{ t('hero.eyebrow') }}</span>
+          <h1>{{ t('hero.title') }}</h1>
+          <p>{{ t('hero.sub') }}</p>
         </div>
-
-        <!-- Redacted Text View -->
-        <div class="section-box">
-          <h4>🔒 Sanitized Text (PII Redacted)</h4>
-          <div class="redacted-box">{{ analysisResult.redactedText }}</div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>100%</strong><span>{{ t('hero.s1') }}</span></div>
+          <div class="hero-stat"><strong>0</strong><span>{{ t('hero.s2') }}</span></div>
+          <div class="hero-stat"><strong>12</strong><span>{{ t('hero.s3') }}</span></div>
         </div>
+      </section>
 
-        <div *ngIf="analysisResult.decision === 'DRAFT_ALLOWED'">
-          <!-- Classification Info -->
-          <div class="info-chips">
-            <span class="chip">📁 Category: <strong>{{ analysisResult.classification.category }}</strong></span>
-            <span class="chip">🏷️ Subcategory: <strong>{{ analysisResult.classification.subcategory }}</strong></span>
-            <span class="chip">🎯 Confidence: <strong>{{ analysisResult.classification.confidence * 100 }}%</strong></span>
+      <div class="workspace-grid">
+        <!-- Column 1: Ticket Input & PII Sanitizer -->
+        <div class="cockpit-col card">
+          <div class="card-header">
+            <h3><span class="card-step-num">1</span>{{ t('card1.title') }}</h3>
+            <span class="pill pill-cyan">{{ t('pill.input') }}</span>
           </div>
 
-          <!-- Resolution Steps (Editable by Analyst) -->
-          <div class="section-box">
-            <div class="section-header-flex">
-              <h4>💡 Source-Grounded Resolution Steps</h4>
-              <span class="badge-edit">✏️ Analyst Editable</span>
+          <div class="sample-pills">
+            <button type="button" class="btn-sample" (click)="loadSampleTicket('lockout')">{{ t('sample.lockout') }}</button>
+            <button type="button" class="btn-sample" (click)="loadSampleTicket('reset')">{{ t('sample.reset') }}</button>
+            <button type="button" class="btn-sample" (click)="loadSampleTicket('batch')">{{ t('sample.batch') }}</button>
+            <button type="button" class="btn-sample" (click)="loadSampleTicket('nomatch')">{{ t('sample.nomatch') }}</button>
+          </div>
+
+          <div class="form-group">
+            <label>{{ t('label.raw') }}</label>
+            <textarea [(ngModel)]="ticketInput" rows="7" [placeholder]="t('ph.raw')"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>{{ t('label.app') }}</label>
+              <input type="text" [(ngModel)]="applicationName" [placeholder]="t('ph.app')" />
             </div>
-            <div class="steps-list">
+            <div class="form-group flex-1">
+              <label>{{ t('label.threshold') }}: <strong>{{ confidenceThreshold }}</strong></label>
+              <input type="range" min="0.1" max="0.9" step="0.05" [(ngModel)]="confidenceThreshold" />
+            </div>
+          </div>
+
+          <button class="btn-primary" [disabled]="loading" (click)="analyzeTicket()">
+            <span *ngIf="!loading">{{ t('btn.analyze') }}</span>
+            <span *ngIf="loading">{{ t('btn.analyzing') }}</span>
+          </button>
+
+          <div *ngIf="errorMessage" class="alert alert-error">
+            ⚠️ {{ errorMessage }}
+          </div>
+
+          <!-- PII Redaction Live Box -->
+          <div *ngIf="analysisResult" class="sanitized-panel">
+            <div class="sanitized-header">
+              <span>{{ t('sanitized.title') }}</span>
+              <span class="badge-safe">{{ t('badge.safe') }}</span>
+            </div>
+            <pre class="redacted-pre">{{ analysisResult.redactedText }}</pre>
+          </div>
+
+          <!-- Duplicate Warning Inline -->
+          <div *ngIf="duplicates.length > 0" class="inline-warning">
+            <strong>{{ tf('warn.dups', duplicates.length) }}</strong>
+            <div *ngFor="let d of duplicates" class="dup-snippet">
+              <span>{{ d.ticketId }} ({{ d.similarityScore * 100 }}% match)</span>
+              <small>{{ d.status }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Signature Evidence Decision Card -->
+        <div class="cockpit-col card">
+          <div class="card-header">
+            <h3><span class="card-step-num">2</span>{{ t('card2.title') }}</h3>
+            <span class="pill" [ngClass]="{'pill-green': analysisResult?.decision === 'DRAFT_ALLOWED', 'pill-red': analysisResult?.decision === 'NO_RELIABLE_MATCH'}">
+              {{ analysisResult ? analysisResult.decision : t('pill.awaiting') }}
+            </span>
+          </div>
+
+          <div *ngIf="!analysisResult && !loading" class="empty-placeholder">
+            <span class="placeholder-icon">⚖️</span>
+            <p>{{ t('empty2') }}</p>
+          </div>
+
+          <div *ngIf="analysisResult" class="decision-content">
+            <!-- Confidence Gauge Box -->
+            <div class="gauge-card" [ngClass]="{'gauge-pass': analysisResult.decision === 'DRAFT_ALLOWED', 'gauge-fail': analysisResult.decision === 'NO_RELIABLE_MATCH'}">
+              <div class="gauge-header">
+                <span class="gauge-label">{{ t('gauge.label') }}</span>
+                <span class="gauge-value">{{ analysisResult.confidence.finalScore * 100 }}%</span>
+              </div>
+
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" [style.width.%]="analysisResult.confidence.finalScore * 100"></div>
+              </div>
+
+              <div class="gauge-verdict">
+                <span *ngIf="analysisResult.decision === 'DRAFT_ALLOWED'">{{ tf('verdict.pass', confidenceThreshold * 100) }}</span>
+                <span *ngIf="analysisResult.decision === 'NO_RELIABLE_MATCH'">{{ t('verdict.fail') }}</span>
+              </div>
+            </div>
+
+            <!-- Localized system message + detected language -->
+            <div class="localized-banner">
+              <span class="lang-chip">{{ analysisResult.language.native }}</span>
+              <div class="localized-copy">
+                <p>{{ analysisResult.localized.decisionMessage }}</p>
+                <small *ngIf="analysisResult.language.code !== 'en'">{{ analysisResult.localized.kbNote }}</small>
+              </div>
+            </div>
+
+            <!-- 4 Pillars Breakdown -->
+            <div class="pillars-grid">
+              <div class="pillar-item">
+                <div class="pillar-meta">
+                  <span>{{ t('pillar.retrieval') }}</span>
+                  <strong>{{ analysisResult.confidence.retrievalRelevance * 100 }}%</strong>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" [style.width.%]="analysisResult.confidence.retrievalRelevance * 100"></div></div>
+              </div>
+
+              <div class="pillar-item">
+                <div class="pillar-meta">
+                  <span>{{ t('pillar.completeness') }}</span>
+                  <strong>{{ analysisResult.confidence.ticketCompleteness * 100 }}%</strong>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" [style.width.%]="analysisResult.confidence.ticketCompleteness * 100"></div></div>
+              </div>
+
+              <div class="pillar-item">
+                <div class="pillar-meta">
+                  <span>{{ t('pillar.agreement') }}</span>
+                  <strong>{{ analysisResult.confidence.sourceAgreement * 100 }}%</strong>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" [style.width.%]="analysisResult.confidence.sourceAgreement * 100"></div></div>
+              </div>
+
+              <div class="pillar-item">
+                <div class="pillar-meta">
+                  <span>{{ t('pillar.grounding') }}</span>
+                  <strong>{{ analysisResult.confidence.groundingCoverage * 100 }}%</strong>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" [style.width.%]="analysisResult.confidence.groundingCoverage * 100"></div></div>
+              </div>
+            </div>
+
+            <!-- Classification Output -->
+            <div class="classification-box">
+              <h4>{{ t('class.title') }}</h4>
+              <div class="class-chips">
+                <span class="class-chip">{{ t('class.domain') }} <strong>{{ analysisResult.classification.category }}</strong></span>
+                <span class="class-chip">{{ t('class.sub') }} <strong>{{ analysisResult.classification.subcategory }}</strong></span>
+              </div>
+              <!-- Priority badge (fetched after analysis) -->
+              <div *ngIf="priorityDecision" class="priority-badge-row">
+                <span class="priority-badge"
+                  [ngClass]="{
+                    'priority-p1': priorityDecision.priority === 'P1',
+                    'priority-p2': priorityDecision.priority === 'P2',
+                    'priority-p3': priorityDecision.priority === 'P3',
+                    'priority-p4': priorityDecision.priority === 'P4'
+                  }">
+                  {{ priorityDecision.priority }} · {{ priorityDecision.urgency }}
+                </span>
+                <small class="priority-rationale">{{ priorityDecision.rationale }}</small>
+              </div>
+            </div>
+
+            <!-- Top Retrieved Evidence Articles -->
+            <div class="evidence-list" *ngIf="analysisResult.evidence.length > 0">
+              <h4>{{ t('evidence.title') }}</h4>
+              <div *ngFor="let ev of analysisResult.evidence" class="evidence-item" (click)="openSourceDrawer(ev.articleId)">
+                <div class="ev-top">
+                  <span class="ev-id">{{ ev.articleId }}</span>
+                  <span class="ev-score">{{ ev.score * 100 }}% match</span>
+                </div>
+                <div class="ev-title">{{ ev.title }}</div>
+                <small class="ev-inspect">{{ t('ev.inspect') }}</small>
+              </div>
+            </div>
+
+            <!-- Dataset-trained signal (multilingual intake) -->
+            <div class="dataset-signal" *ngIf="analysisResult.datasetSignal.similarTickets.length > 0">
+              <h4>{{ analysisResult.localized.datasetSignalLabel }}</h4>
+              <div *ngFor="let s of analysisResult.datasetSignal.similarTickets" class="ds-row">
+                <span class="ds-ref">{{ s.ref }}</span>
+                <span class="ds-subject">{{ s.subject }}</span>
+                <span class="ds-queue">{{ s.queue }}</span>
+                <span class="ds-score">{{ s.score * 100 }}%</span>
+              </div>
+              <small class="ds-note" *ngIf="analysisResult.datasetSignal.queue">
+                {{ t('ds.queueSignal') }} <strong>{{ analysisResult.datasetSignal.queue }}</strong>
+                · {{ analysisResult.datasetSignal.confidence * 100 | number:'1.0-0' }}% {{ t('ds.confidence') }}
+                ({{ analysisResult.datasetSignal.basedOn }} {{ t('ds.nn') }})
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Source-Grounded Resolution & Actions -->
+        <div class="cockpit-col card">
+          <div class="card-header">
+            <h3><span class="card-step-num">3</span>{{ t('card3.title') }}</h3>
+            <span class="pill pill-indigo">{{ t('pill.hitl') }}</span>
+          </div>
+
+          <div *ngIf="!analysisResult" class="empty-placeholder">
+            <span class="placeholder-icon">📋</span>
+            <p>{{ t('empty3') }}</p>
+          </div>
+
+          <div *ngIf="analysisResult && analysisResult.decision === 'NO_RELIABLE_MATCH'" class="refusal-box">
+            <div class="refusal-icon">🚫</div>
+            <h4>{{ t('refusal.title') }}</h4>
+            <p>{{ t('refusal.text') }}</p>
+            <div class="safe-actions">
+              <strong>{{ t('refusal.actions') }}</strong>
+              <ul>
+                <li>{{ t('refusal.a1') }}</li>
+                <li>{{ t('refusal.a2') }}</li>
+                <li>{{ t('refusal.a3') }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div *ngIf="analysisResult && analysisResult.decision === 'DRAFT_ALLOWED'" class="resolution-content">
+            <div class="steps-container">
+              <div class="steps-heading">
+                <span>{{ t('steps.heading') }}</span>
+                <span class="badge-edit">{{ t('badge.edit') }}</span>
+              </div>
+
               <div *ngFor="let step of analysisResult.resolutionSteps" class="step-card">
-                <div class="step-num">{{ step.stepNumber }}</div>
-                <div class="step-body">
-                  <input type="text" class="step-input" [(ngModel)]="step.instruction" />
-                  <div class="step-meta">
-                    <span class="tag-source">📖 Source: {{ step.sourceArticleId }} ({{ step.sourceSection }})</span>
-                    <span class="tag-verified">✔ {{ step.verificationStatus }}</span>
+                <div class="step-badge">{{ step.stepNumber }}</div>
+                <div class="step-content">
+                  <input type="text" class="step-edit-input" [(ngModel)]="step.instruction" />
+                  <div class="step-footer">
+                    <span class="chip-source" (click)="openSourceDrawer(step.sourceArticleId)">
+                      📖 {{ step.sourceArticleId }} · {{ step.sourceSection }}
+                    </span>
+                    <span class="badge-verified">✔ {{ step.verificationStatus }}</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Escalation Notice -->
-          <div *ngIf="analysisResult.escalation.required" class="alert alert-warning">
-            🚨 <strong>Escalation Rule Triggered:</strong> {{ analysisResult.escalation.condition }}
-            <br><small>Source: {{ analysisResult.escalation.sourceArticleId }}</small>
-          </div>
-
-          <!-- Analyst Human-in-the-Loop Actions -->
-          <div class="workflow-actions">
-            <h4>✍️ Analyst Final Sign-off</h4>
-            <div class="btn-group">
-              <button class="btn-action btn-approve" (click)="approveResolution()">
-                ✅ Approve Resolution
-              </button>
-              <button class="btn-action btn-reject" (click)="rejectResolution()">
-                🚫 Reject & Escalate to Tier-2
-              </button>
+            <!-- Escalation Notice -->
+            <div *ngIf="analysisResult.escalation.required" class="escalation-alert">
+              <div class="esc-header">🚨 {{ analysisResult.localized.escalationSuggestion }}</div>
+              <p>{{ analysisResult.escalation.condition }}</p>
+              <small>Citing: {{ analysisResult.escalation.sourceArticleId }}</small>
             </div>
-          </div>
 
-          <!-- Feedback Mechanism -->
-          <div class="feedback-box">
-            <span>Was this AI-grounded resolution helpful?</span>
-            <div class="thumb-buttons">
-              <button class="btn-thumb" [class.active]="feedbackHelpful === true" (click)="submitFeedback(true)">👍 Yes</button>
-              <button class="btn-thumb" [class.active]="feedbackHelpful === false" (click)="submitFeedback(false)">👎 No</button>
+            <!-- Analyst Sign-off Actions -->
+            <div class="signoff-box">
+              <h4>{{ t('signoff') }}</h4>
+              <div class="action-buttons">
+                <button class="btn-approve" (click)="approveResolution()">
+                  {{ t('btn.approve') }}
+                </button>
+                <button class="btn-reject" (click)="rejectResolution()">
+                  {{ t('btn.reject') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Feedback Mechanism -->
+            <div class="feedback-panel">
+              <span>{{ t('fb.question') }}</span>
+              <div class="feedback-btns">
+                <button class="btn-fb" [class.active]="feedbackHelpful === true" (click)="submitFeedback(true)">{{ t('fb.helpful') }}</button>
+                <button class="btn-fb" [class.active]="feedbackHelpful === false" (click)="submitFeedback(false)">{{ t('fb.unhelpful') }}</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- TAB 2: OPERATIONS OVERVIEW DASHBOARD -->
+    <section *ngIf="activeTab === 'dashboard'" class="dashboard-view">
+      <div class="kpi-grid">
+        <div class="kpi-card card">
+          <span class="kpi-label">{{ t('kpi1.t') }}</span>
+          <div class="kpi-value">{{ dashboardStats.totalAnalyzed }}</div>
+          <span class="kpi-trend trend-up">{{ t('kpi1.trend') }}</span>
+        </div>
+
+        <div class="kpi-card card">
+          <span class="kpi-label">{{ t('kpi2.t') }}</span>
+          <div class="kpi-value value-green">{{ dashboardStats.groundedDraftsRate }}%</div>
+          <span class="kpi-sub">{{ t('kpi2.s') }}</span>
+        </div>
+
+        <div class="kpi-card card">
+          <span class="kpi-label">{{ t('kpi3.t') }}</span>
+          <div class="kpi-value value-amber">{{ dashboardStats.needsReviewCount }}</div>
+          <span class="kpi-sub">{{ t('kpi3.s') }}</span>
+        </div>
+
+        <div class="kpi-card card">
+          <span class="kpi-label">{{ t('kpi4.t') }}</span>
+          <div class="kpi-value value-cyan">{{ dashboardStats.noMatchCount }}</div>
+          <span class="kpi-sub">{{ t('kpi4.s') }}</span>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="analytics-card card">
+          <h3>{{ t('dist.title') }}</h3>
+          <div class="decision-chart-mock">
+            <div class="dist-row">
+              <span>{{ t('dist.grounded') }}</span>
+              <div class="dist-bar"><div class="dist-fill fill-green" style="width: 78%"></div></div>
+              <strong>78%</strong>
+            </div>
+            <div class="dist-row">
+              <span>{{ t('dist.review') }}</span>
+              <div class="dist-bar"><div class="dist-fill fill-amber" style="width: 14%"></div></div>
+              <strong>14%</strong>
+            </div>
+            <div class="dist-row">
+              <span>{{ t('dist.refused') }}</span>
+              <div class="dist-bar"><div class="dist-fill fill-red" style="width: 8%"></div></div>
+              <strong>8%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-card card">
+          <h3>{{ t('domains.title') }}</h3>
+          <div class="domain-list">
+            <div class="domain-item">
+              <span class="domain-name">Access (Account Lockout, Password Reset, SSO)</span>
+              <span class="domain-count">42 incidents</span>
+            </div>
+            <div class="domain-item">
+              <span class="domain-name">Performance (Slow Reports, High CPU)</span>
+              <span class="domain-count">35 incidents</span>
+            </div>
+            <div class="domain-item">
+              <span class="domain-name">Batch (Nightly Job Failures &amp; Hangs)</span>
+              <span class="domain-count">28 incidents</span>
+            </div>
+            <div class="domain-item">
+              <span class="domain-name">Interface (API Timeouts, File Rejections)</span>
+              <span class="domain-count">19 incidents</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: KNOWLEDGE BASE EXPLORER -->
+    <section *ngIf="activeTab === 'knowledge-base'" class="kb-view card">
+      <div class="kb-header">
+        <div>
+          <h3>{{ t('kb.title') }}</h3>
+          <p class="subtext">{{ t('kb.sub') }}</p>
+        </div>
+      </div>
+
+      <div class="articles-grid">
+        <div *ngFor="let art of knowledgeCatalog" class="article-card" (click)="openSourceDrawer(art.articleId)">
+          <div class="art-badge-row">
+            <span class="art-id">{{ art.articleId }}</span>
+            <span class="art-cat">{{ art.category }} · {{ art.subcategory }}</span>
+          </div>
+          <h4>{{ art.title }}</h4>
+          <p class="art-cause"><strong>{{ t('kb.cause') }}</strong> {{ art.possibleCause }}</p>
+          <div class="art-steps-count">
+            <span>{{ tf('kb.steps', art.steps.length) }}</span>
+            <span class="art-ver">v{{ art.version }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: DUPLICATE INCIDENT EXPLORER -->
+    <section *ngIf="activeTab === 'duplicates'" class="duplicates-view card">
+      <h3>{{ t('dups.title') }}</h3>
+      <p class="subtext">{{ t('dups.sub') }}</p>
+
+      <div class="duplicate-demo-table">
+        <div class="dup-row">
+          <div class="dup-col"><strong>{{ t('dups.new') }}</strong> INC-2001 (Account lockout after failed logins)</div>
+          <div class="dup-col"><strong>{{ t('dups.matched') }}</strong> INC-1082 (Lockout policy triggered)</div>
+          <div class="dup-score-badge">92% Match</div>
+          <button class="btn-table-action" (click)="setTab('workspace')">{{ t('dups.open') }}</button>
+        </div>
+
+        <div class="dup-row">
+          <div class="dup-col"><strong>{{ t('dups.new') }}</strong> INC-2002 (Nightly batch job failed)</div>
+          <div class="dup-col"><strong>{{ t('dups.matched') }}</strong> INC-1019 (Batch step error re-run)</div>
+          <div class="dup-score-badge">88% Match</div>
+          <button class="btn-table-action" (click)="setTab('workspace')">{{ t('dups.open') }}</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: KNOWLEDGE GAP INTELLIGENCE (BONUS 2.5) -->
+    <section *ngIf="activeTab === 'gaps'" class="gaps-view card">
+      <div class="gaps-header">
+        <div>
+          <h3>{{ t('gaps.title') }}</h3>
+          <p class="subtext">{{ t('gaps.sub') }}</p>
+        </div>
+      </div>
+
+      <div class="gap-cards-container">
+        <div *ngFor="let gap of knowledgeGaps" class="gap-intel-card">
+          <div class="gap-tag">{{ t('gaps.tag') }}</div>
+          <h4>{{ gap.proposedTopic }}</h4>
+          <p><strong>{{ t('gaps.kw') }}</strong> <code class="code-kw">{{ gap.patternKeyword }}</code></p>
+          <p class="gap-description">{{ gap.recommendation }}</p>
+          <div class="gap-footer">
+            <span class="badge-amber">{{ tf('gaps.trigger', gap.affectedTicketCount) }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: EVALUATION BENCHMARK -->
+    <section *ngIf="activeTab === 'evaluation'" class="eval-view card">
+      <div class="eval-header">
+        <div>
+          <h3>{{ t('eval.title') }}</h3>
+          <p class="subtext">{{ t('eval.sub') }}</p>
+        </div>
+        <span class="badge-safe">Run: eval-2026-10-06-01</span>
+      </div>
+
+      <div class="eval-metrics-grid">
+        <div class="eval-card">
+          <span class="eval-metric-label">{{ t('eval.m1') }}</span>
+          <div class="eval-metric-val">{{ evaluationData.categoryAccuracy }}%</div>
+          <small>{{ t('eval.m1.n') }}</small>
+        </div>
+
+        <div class="eval-card">
+          <span class="eval-metric-label">{{ t('eval.m2') }}</span>
+          <div class="eval-metric-val">{{ evaluationData.top3HitRate }}%</div>
+          <small>{{ t('eval.m2.n') }}</small>
+        </div>
+
+        <div class="eval-card">
+          <span class="eval-metric-label">{{ t('eval.m3') }}</span>
+          <div class="eval-metric-val value-green">{{ evaluationData.groundingCoverage }}%</div>
+          <small>{{ t('eval.m3.n') }}</small>
+        </div>
+
+        <div class="eval-card">
+          <span class="eval-metric-label">{{ t('eval.m4') }}</span>
+          <div class="eval-metric-val value-cyan">{{ evaluationData.refusalPrecision }}%</div>
+          <small>{{ t('eval.m4.n') }}</small>
+        </div>
+      </div>
+
+      <!-- Threshold Safety Simulator (real measured sweep) -->
+      <div class="simulator-box">
+        <div class="sim-header">
+          <div>
+            <h4>{{ t('sim.title') }}</h4>
+            <p>{{ t('sim.desc') }}</p>
+          </div>
+          <span class="badge-safe" *ngIf="evaluationSweep">LIVE · {{ evaluationSweep.dataset.tickets }} {{ t('sim.tickets') }}</span>
+        </div>
+
+        <!-- Real measured chart -->
+        <div class="sim-chart" *ngIf="evaluationSweep">
+          <svg viewBox="0 0 600 230" class="chart-svg" role="img" [attr.aria-label]="t('sim.title')">
+            <rect [attr.x]="safeWindowX()" [attr.width]="safeWindowW()" y="20" height="180" class="chart-band"/>
+            <line x1="20" y1="200" x2="580" y2="200" class="chart-axis"/>
+            <line x1="20" y1="20" x2="20" y2="200" class="chart-axis"/>
+            <line [attr.x1]="tunedX()" [attr.x2]="tunedX()" y1="14" y2="200" class="chart-tuned"/>
+            <text [attr.x]="tunedX() + 6" y="28" class="chart-tuned-label">{{ t('sim.tuned') }} {{ evaluationSweep.tunedThreshold }}</text>
+            <polyline [attr.points]="coveragePoints()" class="chart-line line-coverage"/>
+            <polyline [attr.points]="safetyPoints()" class="chart-line line-safety"/>
+            <circle [attr.cx]="chartX(simulatedThreshold)" [attr.cy]="chartY(activeSweepPoint()?.coverage ?? 0)" r="5" class="chart-dot dot-coverage"/>
+            <circle [attr.cx]="chartX(simulatedThreshold)" [attr.cy]="chartY(activeSweepPoint()?.refusalAccuracy ?? 0)" r="5" class="chart-dot dot-safety"/>
+            <text x="20" y="220" class="chart-axis-label">0.05</text>
+            <text x="560" y="220" class="chart-axis-label">0.90</text>
+          </svg>
+          <div class="chart-legend">
+            <span class="legend-item"><i class="legend-swatch sw-coverage"></i>{{ t('sim.coverage') }}</span>
+            <span class="legend-item"><i class="legend-swatch sw-safety"></i>{{ t('sim.safety') }}</span>
+            <span class="legend-item" *ngIf="evaluationSweep.safeWindow"><i class="legend-swatch sw-band"></i>{{ t('sim.safeWindow') }} {{ evaluationSweep.safeWindow.min }}–{{ evaluationSweep.safeWindow.max }}</span>
+          </div>
+        </div>
+
+        <div class="sim-slider-row">
+          <label>{{ t('sim.threshold') }} <strong>{{ simulatedThreshold }}</strong></label>
+          <input type="range" min="0.2" max="0.8" step="0.05" [(ngModel)]="simulatedThreshold" />
+        </div>
+
+        <div class="sim-results">
+          <div class="sim-stat">
+            <span>{{ t('sim.coverage') }}</span>
+            <strong>{{ activeSweepPoint()?.coverage ?? '—' }}%</strong>
+            <small>{{ activeSweepPoint()?.groundedDrafts ?? 0 }} {{ t('sim.drafts') }}</small>
+          </div>
+          <div class="sim-stat">
+            <span>{{ t('sim.safety') }}</span>
+            <strong>{{ activeSweepPoint()?.refusalAccuracy ?? '—' }}%</strong>
+            <small>{{ t('sim.falseRefusals') }} {{ activeSweepPoint()?.falseRefusals ?? 0 }}</small>
+          </div>
+          <div class="sim-stat" *ngIf="evaluationSweep">
+            <span>{{ t('sim.tuned') }}</span>
+            <strong>{{ evaluationSweep.tunedThreshold }}</strong>
+            <small>{{ t('sim.separation') }} {{ evaluationSweep.maxUnmatchedScore }} – {{ evaluationSweep.minMatchedScore }}</small>
+          </div>
+        </div>
+
+        <p class="sim-note" *ngIf="evaluationSweep">{{ tf('sim.realNote', evaluationSweep.dataset.tickets) }}</p>
+      </div>
+    </section>
+
+    <!-- TAB 7: BATCH CSV TRIAGE -->
+    <section *ngIf="activeTab === 'batch'" class="batch-view card">
+      <div class="batch-header-row">
+        <div>
+          <h3>{{ t('batch.title') }}</h3>
+          <p class="batch-desc">{{ t('batch.desc') }}</p>
+        </div>
+        <a href="/assets/batch_sample.csv" download class="btn-outline">{{ t('batch.download') }}</a>
+      </div>
+
+      <div class="batch-upload-zone">
+        <input type="file" id="batchFileInput" accept=".csv" (change)="onBatchFileChange($event)" />
+        <label for="batchFileInput" class="upload-label">
+          <span class="upload-icon">📤</span>
+          <span *ngIf="!batchFile">{{ t('batch.upload') }}</span>
+          <span *ngIf="batchFile">{{ batchFile.name }} ({{ (batchFile.size / 1024).toFixed(1) }} KB)</span>
+        </label>
+
+        <div class="batch-controls">
+          <label>{{ t('batch.threshold') }} <strong>{{ batchThreshold }}</strong></label>
+          <input type="range" min="0.05" max="0.9" step="0.05" [(ngModel)]="batchThreshold" />
+          <button class="btn-primary" [disabled]="!batchFile || batchLoading" (click)="runBatchTriage()">
+            <span *ngIf="!batchLoading">{{ t('batch.run') }}</span>
+            <span *ngIf="batchLoading">{{ t('batch.processing') }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="batchError" class="alert alert-error">⚠️ {{ batchError }}</div>
+
+      <div *ngIf="batchResults.length > 0" class="batch-results-section">
+        <div class="batch-results-header">
+          <h4>{{ tf('batch.processed', batchResults.length, batchThreshold) }}</h4>
+          <button class="btn-outline" (click)="exportBatchResults()">{{ t('batch.export') }}</button>
+        </div>
+
+        <div class="batch-table-wrapper">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th>{{ t('th.index') }}</th>
+                <th>{{ t('th.ticketId') }}</th>
+                <th>{{ t('th.decision') }}</th>
+                <th>{{ t('th.priority') }}</th>
+                <th>{{ t('th.urgency') }}</th>
+                <th>{{ t('th.category') }}</th>
+                <th>{{ t('th.confidence') }}</th>
+                <th>{{ t('th.article') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of batchResults"
+                  [ngClass]="{
+                    'row-match': row.decision === 'DRAFT_ALLOWED',
+                    'row-nomatch': row.decision === 'NO_RELIABLE_MATCH',
+                    'row-skip': row.decision === 'SKIPPED'
+                  }">
+                <td>{{ row.rowIndex }}</td>
+                <td><strong>{{ row.ticketId }}</strong></td>
+                <td>
+                  <span class="decision-chip"
+                    [ngClass]="{'chip-green': row.decision === 'DRAFT_ALLOWED', 'chip-red': row.decision === 'NO_RELIABLE_MATCH', 'chip-grey': row.decision === 'SKIPPED'}">
+                    {{ row.decision }}
+                  </span>
+                </td>
+                <td>
+                  <span class="priority-badge"
+                    [ngClass]="{
+                      'priority-p1': row.priority === 'P1',
+                      'priority-p2': row.priority === 'P2',
+                      'priority-p3': row.priority === 'P3',
+                      'priority-p4': row.priority === 'P4'
+                    }">
+                    {{ row.priority }}
+                  </span>
+                </td>
+                <td>{{ row.urgency }}</td>
+                <td>{{ row.category }}<br/><small>{{ row.subcategory }}</small></td>
+                <td>{{ (row.confidence * 100).toFixed(1) }}%</td>
+                <td><span *ngIf="row.topArticleId" class="article-chip">{{ row.topArticleId }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div *ngIf="!batchResults.length && !batchLoading" class="empty-placeholder">
+        <span class="placeholder-icon">📊</span>
+        <p>{{ t('batch.empty') }}</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Slide-over Source Drawer Modal -->
+  <div *ngIf="activeDrawerArticle" class="drawer-backdrop" (click)="closeSourceDrawer()">
+    <div class="drawer-panel" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <div>
+          <span class="drawer-id">{{ activeDrawerArticle.articleId }}</span>
+          <h3>{{ activeDrawerArticle.title }}</h3>
+        </div>
+        <button class="btn-close-drawer" (click)="closeSourceDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="drawer-section">
+          <h4>{{ t('drawer.category') }}</h4>
+          <p>{{ activeDrawerArticle.category }} · {{ activeDrawerArticle.subcategory }}</p>
+        </div>
+
+        <div class="drawer-section">
+          <h4>{{ t('drawer.symptoms') }}</h4>
+          <div class="tag-row">
+            <span *ngFor="let s of activeDrawerArticle.symptoms" class="tag-sym">{{ s }}</span>
+          </div>
+        </div>
+
+        <div class="drawer-section">
+          <h4>{{ t('drawer.cause') }}</h4>
+          <p>{{ activeDrawerArticle.possibleCause }}</p>
+        </div>
+
+        <div class="drawer-section">
+          <h4>{{ t('drawer.prereq') }}</h4>
+          <ul>
+            <li *ngFor="let p of activeDrawerArticle.prerequisites">{{ p }}</li>
+          </ul>
+        </div>
+
+        <div class="drawer-section">
+          <h4>{{ t('drawer.steps') }}</h4>
+          <div *ngFor="let step of activeDrawerArticle.steps" class="drawer-step">
+            <span class="d-step-num">{{ step.order }}</span>
+            <div class="d-step-body">
+              <span class="d-step-id">[{{ step.sourceStepId }}]</span>
+              <p>{{ step.text }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-section">
+          <h4>{{ t('drawer.validation') }}</h4>
+          <p class="val-text">✔ {{ activeDrawerArticle.validation }}</p>
+        </div>
+
+        <div class="drawer-section esc-box">
+          <h4>{{ t('drawer.esc') }}</h4>
+          <p>{{ activeDrawerArticle.escalationCondition }}</p>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- FLOATING TOGGLE CHATBOT WITH AVATARS -->
+  <div class="chatbot-container">
+    <!-- Chatbot Toggle Button -->
+    <button class="chatbot-toggle-btn" (click)="toggleChatbot()">
+      <img class="bot-icon-img" src="brand/chatbot-bubble.svg" alt="" />
+      <span class="bot-toggle-text">{{ t('chat.toggle') }}</span>
+      <span class="online-indicator"></span>
+    </button>
+
+    <!-- Slide-up Chat Window -->
+    <div *ngIf="chatbotOpen" class="chat-window card">
+      <div class="chat-header">
+        <div class="chat-title-group">
+          <span class="chat-avatar-icon">{{ selectedAvatar === 'Atlas' ? '🏛️' : (selectedAvatar === 'Nova' ? '✨' : '⚡') }}</span>
+          <div>
+            <h4>{{ selectedAvatar }}</h4>
+            <small>{{ selectedAvatar === 'Atlas' ? 'Senior IT Architect' : (selectedAvatar === 'Nova' ? 'AI Guide & Triage' : 'Fast Resolver') }}</small>
+          </div>
+        </div>
+        <button class="btn-close-chat" (click)="toggleChatbot()">✕</button>
+      </div>
+
+      <!-- Avatar Switcher Row -->
+      <div class="avatar-switcher">
+        <span class="switch-label">{{ t('chat.switch') }}</span>
+        <div class="avatar-buttons">
+          <button
+            *ngFor="let av of avatars"
+            class="btn-avatar-select"
+            [class.active]="selectedAvatar === av.id"
+            (click)="selectAvatar(av.id)"
+            [title]="av.description">
+            {{ av.emoji }} {{ av.name }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Question Suggestions -->
+      <div class="quick-chips">
+        <button class="quick-chip" (click)="sendChatMessage('How do I resolve an account lockout?')">{{ t('chat.chip1') }}</button>
+        <button class="quick-chip" (click)="sendChatMessage('Explain the SSO login loop fix')">{{ t('chat.chip2') }}</button>
+        <button class="quick-chip" (click)="sendChatMessage('Why did TicketIQ refuse my query?')">{{ t('chat.chip3') }}</button>
+      </div>
+
+      <!-- Chat Messages Scroll Area -->
+      <div class="chat-messages-body">
+        <div *ngFor="let msg of chatMessages" class="chat-bubble" [ngClass]="{'bubble-user': msg.sender === 'user', 'bubble-bot': msg.sender === 'bot'}">
+          <div class="bubble-header" *ngIf="msg.sender === 'bot'">
+            <span>{{ msg.avatar || selectedAvatar }}</span>
+          </div>
+          <div class="bubble-text">{{ msg.text }}</div>
+          <small class="bubble-time">{{ msg.time }}</small>
+        </div>
+
+        <div *ngIf="chatSending" class="chat-bubble bubble-bot typing-indicator">
+          <span>{{ t('chat.typing') }}</span>
+        </div>
+      </div>
+
+      <!-- Chat Input Field -->
+      <div class="chat-input-row">
+        <input
+          type="text"
+          [placeholder]="chatPlaceholder()"
+          [(ngModel)]="chatInput"
+          (keyup.enter)="sendChatMessage()" />
+        <button class="btn-send-chat" [disabled]="chatSending" (click)="sendChatMessage()">
+          ➤
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

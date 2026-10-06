@@ -2,14 +2,12 @@ package com.ticketiq.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ticketiq.document.TicketAiAnalysisLog;
-import com.ticketiq.dto.DashboardMetricsDto;
-import com.ticketiq.dto.FeedbackRequestDto;
-import com.ticketiq.dto.TicketAnalysisRequestDto;
-import com.ticketiq.dto.TicketAnalysisResponseDto;
+import com.ticketiq.dto.*;
 import com.ticketiq.entity.AuditEvent;
 import com.ticketiq.entity.Ticket;
 import com.ticketiq.entity.TicketFeedback;
 import com.ticketiq.integration.ai.AiServiceClient;
+import com.ticketiq.mapper.TicketMapper;
 import com.ticketiq.repository.AuditEventRepository;
 import com.ticketiq.repository.TicketFeedbackRepository;
 import com.ticketiq.repository.TicketRepository;
@@ -18,39 +16,60 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Core business logic for ticket lifecycle management:
+ * create → analyze (AI) → approve/reject → feedback → audit.
+ */
 @Service
 @RequiredArgsConstructor
 public class TicketService {
 
-    private final TicketRepository ticketRepository;
-    private final TicketAiAnalysisRepository mongoAnalysisRepository;
-    private final AuditEventRepository auditEventRepository;
-    private final TicketFeedbackRepository feedbackRepository;
-    private final AiServiceClient aiServiceClient;
-    private final ObjectMapper objectMapper;
+    private final TicketRepository             ticketRepository;
+    private final TicketAiAnalysisRepository   mongoAnalysisRepository;
+    private final AuditEventRepository         auditEventRepository;
+    private final TicketFeedbackRepository     feedbackRepository;
+    private final AiServiceClient              aiServiceClient;
+    private final ObjectMapper                 objectMapper;
+    private final TicketMapper                 ticketMapper;
+
+    // ── Read ──────────────────────────────────────────────────────────────────
 
     public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
+    }
+
+    public List<TicketSummaryDto> getAllTicketSummaries() {
+        return ticketMapper.toSummaryList(ticketRepository.findAll());
     }
 
     public Optional<Ticket> getTicketById(String id) {
         return ticketRepository.findById(id);
     }
 
+    // ── Create ────────────────────────────────────────────────────────────────
+
     @Transactional
     public Ticket createTicket(Ticket ticket) {
-        if (ticket.getTicketNumber() == null) {
+        if (ticket.getTicketNumber() == null || ticket.getTicketNumber().isBlank()) {
             ticket.setTicketNumber("INC-" + System.currentTimeMillis());
         }
+        if (ticket.getTitle() == null || ticket.getTitle().isBlank()) {
+            // Auto-derive title from the first 80 chars of description
+            String desc = ticket.getRawDescription() != null ? ticket.getRawDescription() : "";
+            ticket.setTitle(desc.length() > 80 ? desc.substring(0, 80) + "…" : desc);
+        }
         Ticket saved = ticketRepository.save(ticket);
-        auditEventRepository.save(new AuditEvent(saved.getId(), "Analyst", "CREATED", "Ticket submitted for triage"));
+        auditEventRepository.save(new AuditEvent(
+                saved.getId(), "Analyst", "CREATED",
+                "Ticket submitted for triage via TicketIQ Command Center"
+        ));
         return saved;
     }
+
+    // ── Analyse ───────────────────────────────────────────────────────────────
 
     @Transactional
     public TicketAnalysisResponseDto analyzeTicket(String ticketId, double confidenceThreshold) {
@@ -60,41 +79,48 @@ public class TicketService {
         ticket.setStatus("ANALYZING");
         ticketRepository.save(ticket);
 
+        // Build the AI request
         TicketAnalysisRequestDto request = new TicketAnalysisRequestDto();
         request.setTicketId(ticket.getTicketNumber());
         request.setTicketText(ticket.getRawDescription());
+        request.setConfidenceThreshold(confidenceThreshold);
+
         Map<String, Object> fields = new HashMap<>();
         if (ticket.getApplicationName() != null) {
             fields.put("application", ticket.getApplicationName());
         }
         request.setStructuredFields(fields);
-        request.setConfidenceThreshold(confidenceThreshold);
 
+        // Invoke Python AI service
         TicketAnalysisResponseDto response = aiServiceClient.analyzeTicket(request);
 
-        // Update MySQL Ticket record
+        // Update MySQL
         ticket.setRedactedDescription(response.getRedactedText());
         ticket.setDecisionStatus(response.getDecision());
         ticket.setStatus("DRAFT_ALLOWED".equals(response.getDecision()) ? "ANALYZED" : "NO_RELIABLE_MATCH");
         ticketRepository.save(ticket);
 
-        auditEventRepository.save(new AuditEvent(ticket.getId(), "TicketIQ-AI", "ANALYZED", 
-            "Decision: " + response.getDecision() + " | Threshold: " + confidenceThreshold));
+        auditEventRepository.save(new AuditEvent(
+                ticket.getId(), "TicketIQ-AI", "ANALYZED",
+                "Decision: " + response.getDecision() + " | Threshold: " + confidenceThreshold
+        ));
 
-        // Save AI Analysis Log into MongoDB
+        // Persist full AI analysis log to MongoDB (non-critical — failure is warned, not thrown)
         try {
-            TicketAiAnalysisLog mongoLog = new TicketAiAnalysisLog();
-            mongoLog.setTicketId(ticket.getId());
-            mongoLog.setDecision(response.getDecision());
-            mongoLog.setRedactedText(response.getRedactedText());
-            mongoLog.setFullAnalysisJson(objectMapper.convertValue(response, Map.class));
-            mongoAnalysisRepository.save(mongoLog);
+            TicketAiAnalysisLog log = new TicketAiAnalysisLog();
+            log.setTicketId(ticket.getId());
+            log.setDecision(response.getDecision());
+            log.setRedactedText(response.getRedactedText());
+            log.setFullAnalysisJson(objectMapper.convertValue(response, Map.class));
+            mongoAnalysisRepository.save(log);
         } catch (Exception e) {
-            System.err.println("Warning: Could not save log to MongoDB: " + e.getMessage());
+            System.err.println("[WARN] MongoDB analysis log failed (non-fatal): " + e.getMessage());
         }
 
         return response;
     }
+
+    // ── Approve / Reject ──────────────────────────────────────────────────────
 
     @Transactional
     public Ticket approveTicket(String ticketId, String approvedBy) {
@@ -102,8 +128,12 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
         ticket.setStatus("APPROVED");
         Ticket saved = ticketRepository.save(ticket);
-        auditEventRepository.save(new AuditEvent(ticket.getId(), approvedBy != null ? approvedBy : "Analyst", 
-            "APPROVED", "Analyst approved the source-grounded resolution"));
+        auditEventRepository.save(new AuditEvent(
+                ticket.getId(),
+                approvedBy != null ? approvedBy : "Analyst",
+                "APPROVED",
+                "Analyst approved the source-grounded resolution"
+        ));
         return saved;
     }
 
@@ -113,10 +143,16 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
         ticket.setStatus("REJECTED");
         Ticket saved = ticketRepository.save(ticket);
-        auditEventRepository.save(new AuditEvent(ticket.getId(), rejectedBy != null ? rejectedBy : "Analyst", 
-            "REJECTED", "Resolution rejected: " + reason));
+        auditEventRepository.save(new AuditEvent(
+                ticket.getId(),
+                rejectedBy != null ? rejectedBy : "Analyst",
+                "REJECTED",
+                "Resolution rejected: " + reason
+        ));
         return saved;
     }
+
+    // ── Feedback ──────────────────────────────────────────────────────────────
 
     @Transactional
     public TicketFeedback submitFeedback(String ticketId, FeedbackRequestDto dto) {
@@ -128,29 +164,45 @@ public class TicketService {
         feedback.setSubmittedBy(dto.getSubmittedBy() != null ? dto.getSubmittedBy() : "Analyst");
         TicketFeedback saved = feedbackRepository.save(feedback);
 
-        auditEventRepository.save(new AuditEvent(ticketId, feedback.getSubmittedBy(), 
-            "FEEDBACK_SUBMITTED", "Helpful: " + dto.isHelpful()));
+        auditEventRepository.save(new AuditEvent(
+                ticketId, feedback.getSubmittedBy(),
+                "FEEDBACK_SUBMITTED",
+                "Helpful: " + dto.isHelpful()
+                        + (dto.getFeedbackNotes() != null ? " | Notes: " + dto.getFeedbackNotes() : "")
+        ));
         return saved;
     }
+
+    // ── Audit ─────────────────────────────────────────────────────────────────
 
     public List<AuditEvent> getAuditTrail(String ticketId) {
         return auditEventRepository.findByTicketIdOrderByCreatedAtDesc(ticketId);
     }
 
+    // ── Dashboard ─────────────────────────────────────────────────────────────
+
     public DashboardMetricsDto getDashboardMetrics() {
-        long total = ticketRepository.count();
-        long approved = ticketRepository.findAll().stream().filter(t -> "APPROVED".equals(t.getStatus())).count();
-        long rejected = ticketRepository.findAll().stream().filter(t -> "REJECTED".equals(t.getStatus())).count();
-        long noMatch = ticketRepository.findAll().stream().filter(t -> "NO_RELIABLE_MATCH".equals(t.getStatus())).count();
-        long analyzed = ticketRepository.findAll().stream().filter(t -> "ANALYZED".equals(t.getStatus())).count();
+        List<Ticket> all = ticketRepository.findAll();
+
+        long total    = all.size();
+        long approved = all.stream().filter(t -> "APPROVED".equals(t.getStatus())).count();
+        long rejected = all.stream().filter(t -> "REJECTED".equals(t.getStatus())).count();
+        long noMatch  = all.stream().filter(t -> "NO_RELIABLE_MATCH".equals(t.getStatus())).count();
+        long analyzed = all.stream().filter(t -> "ANALYZED".equals(t.getStatus())).count();
+
+        // grounding coverage: tickets with a positive AI decision vs all analyzed
+        long positiveDecisions = approved + analyzed;
+        double groundingRate = (positiveDecisions + noMatch) > 0
+                ? (100.0 * positiveDecisions) / (positiveDecisions + noMatch)
+                : 100.0;
 
         return DashboardMetricsDto.builder()
                 .totalTickets(total)
-                .analyzedTickets(analyzed + approved + rejected)
+                .analyzedTickets(analyzed + approved + rejected + noMatch)
                 .approvedTickets(approved)
                 .rejectedTickets(rejected)
                 .noMatchTickets(noMatch)
-                .groundingCoverageRate(100.0)
+                .groundingCoverageRate(Math.round(groundingRate * 10.0) / 10.0)
                 .decisionAccuracyRate(90.0)
                 .build();
     }

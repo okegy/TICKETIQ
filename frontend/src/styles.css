@@ -1,1 +1,84 @@
-/* You can add global styles to this file, and also import other style files */
+/* ═══════════════════════════════════════════════════════════════
+   TicketIQ Design System — global tokens
+   Type: Space Grotesk (display) · Inter (UI) · JetBrains Mono (data)
+   Palette: deep-space navy · indigo primary · cyan accent
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Core palette (read by the CubeWave scene) */
+  --primary: #6e7bff;
+  --accent: #22d3ee;
+
+  /* Surfaces */
+  --bg: #05070f;
+  --bg-raised: #0a0f22;
+  --surface: rgba(15, 21, 44, 0.72);
+  --surface-solid: #101731;
+  --surface-inset: rgba(5, 9, 22, 0.75);
+  --border: rgba(148, 163, 255, 0.12);
+  --border-strong: rgba(148, 163, 255, 0.24);
+
+  /* Text */
+  --text: #eef2ff;
+  --text-muted: #9aa7c7;
+  --text-faint: #64718f;
+
+  /* Semantic */
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #fb7185;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  /* Elevation */
+  --shadow-card: 0 14px 40px rgba(2, 4, 12, 0.45), 0 1px 0 rgba(148, 163, 255, 0.06) inset;
+  --shadow-pop: 0 24px 64px rgba(2, 4, 12, 0.65);
+
+  /* Type */
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-body: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Tamil',
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, 'SFMono-Regular', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(110, 123, 255, 0.35);
+  color: #fff;
+}
+
+/* Refined scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 255, 0.25) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 255, 0.22);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 255, 0.38); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

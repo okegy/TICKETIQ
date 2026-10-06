@@ -1,0 +1,16 @@
+ticketId,ticketText,application
+INC-7001,"User cannot log in, account locked after too many failed login attempts",Identity Admin Console
+INC-7002,"Password reset email not received even after requesting twice",Identity Portal
+INC-7003,"SSO login loop with expired token when opening the finance dashboard",SSO Gateway
+INC-7004,"Report page loading very slowly for the last two hours, takes 90 seconds",Reporting Suite
+INC-7005,"High CPU on application server after this morning's deployment",App Server
+INC-7006,"Nightly batch job failed during reconciliation step",Batch Scheduler
+INC-7007,"Batch job stuck in running state since midnight, no log output",Batch Scheduler
+INC-7008,"Partner API returns 503 timeout when submitting orders",Partner API
+INC-7009,"Interface file rejected as malformed by the inbound parser",Integration Hub
+INC-7010,"Duplicate records appearing in the customer table after data load",Data Pipeline
+INC-7011,"Dashboard shows missing data after refresh since yesterday",Reporting Suite
+INC-7012,"PDF export fails and downloads a blank file",Reporting Suite
+INC-7013,"Production down, all users affected since 09:00, revenue impact",Core Platform
+INC-7014,"The coffee machine on 4th floor breakroom is out of espresso beans",Facility Support
+INC-7015,"My keyboard keys are sticking, please send help",Facility Support

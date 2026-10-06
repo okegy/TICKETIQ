@@ -1,132 +1,624 @@
 [
   {
+    "id": "KB-01",
     "articleId": "KB-01",
-    "title": "VPN Connection Timeout - GlobalProtect Gateway Unreachable",
-    "category": "Network & Access",
-    "subcategory": "VPN",
-    "symptoms": ["VPN timeout", "ERR_GATEWAY_UNREACHABLE", "GlobalProtect fails to connect"],
-    "possibleCause": "Stale gateway profile or client firewall blocking port 443.",
-    "prerequisites": ["Ensure active internet connection outside VPN."],
+    "title": "Account locked after failed logins",
+    "category": "Access",
+    "subcategory": "Account Lockout",
+    "symptoms": [
+      "user cannot log in",
+      "account locked",
+      "too many failed login attempts"
+    ],
+    "symptoms_raw": "user cannot log in, account locked, too many failed login attempts",
+    "possibleCause": "Lockout policy triggers after 5 failed attempts.",
+    "cause": "Lockout policy triggers after 5 failed attempts.",
+    "prerequisites": [
+      "Verify user identity per service desk policy."
+    ],
     "steps": [
       {
         "sourceStepId": "KB-01-S1",
         "order": 1,
-        "text": "Open GlobalProtect settings, go to Network, and select Refresh Connection."
+        "text": "Open admin console > Users and search the user ID."
       },
       {
         "sourceStepId": "KB-01-S2",
         "order": 2,
-        "text": "If unresolved, clear DNS cache using 'ipconfig /flushdns' in command prompt."
+        "text": "Click Unlock Account."
+      },
+      {
+        "sourceStepId": "KB-01-S3",
+        "order": 3,
+        "text": "Ask the user to reset the password if forgotten."
+      },
+      {
+        "sourceStepId": "KB-01-S4",
+        "order": 4,
+        "text": "Confirm the user can log in."
       }
     ],
-    "validation": "GlobalProtect status shows Connected.",
-    "escalationCondition": "Escalate to Network Operations if error code ERR_GATEWAY_UNREACHABLE persists after DNS flush.",
-    "keywords": ["VPN", "GlobalProtect", "ERR_GATEWAY_UNREACHABLE", "network", "timeout"],
+    "validation": "Verify resolution of Account Lockout per runbook.",
+    "escalationCondition": "Repeated lockouts within 1 hour: escalate to Security team.",
+    "escalation": "Repeated lockouts within 1 hour: escalate to Security team.",
+    "keywords": [
+      "Access",
+      "Account Lockout",
+      "user cannot log in",
+      "account locked",
+      "too many failed login attempts"
+    ],
     "version": "1.0"
   },
   {
+    "id": "KB-02",
     "articleId": "KB-02",
-    "title": "Payroll Portal Authentication Failure After Password Reset (AUTH-401)",
-    "category": "Access Management",
-    "subcategory": "Password Synchronization",
-    "symptoms": ["AUTH-401", "Login failure after password reset", "Payroll portal access denied"],
-    "possibleCause": "Directory password synchronization delay across identity domain controllers.",
-    "prerequisites": ["Use approved identity verification procedure before supporting account reset."],
+    "title": "Password reset email not received",
+    "category": "Access",
+    "subcategory": "Password Reset",
+    "symptoms": [
+      "reset link email not arriving",
+      "no password reset mail",
+      "inbox empty"
+    ],
+    "symptoms_raw": "reset link email not arriving, no password reset mail, inbox empty",
+    "possibleCause": "Mail filter blocking sender or wrong registered address.",
+    "cause": "Mail filter blocking sender or wrong registered address.",
+    "prerequisites": [
+      "Access to user profile."
+    ],
     "steps": [
       {
         "sourceStepId": "KB-02-S1",
         "order": 1,
-        "text": "Verify directory password synchronization status for the affected user."
+        "text": "Confirm the registered email address."
       },
       {
         "sourceStepId": "KB-02-S2",
         "order": 2,
-        "text": "Instruct user to clear browser cache and stored web credentials."
+        "text": "Check spam and junk folders."
       },
       {
         "sourceStepId": "KB-02-S3",
         "order": 3,
-        "text": "Have user attempt login again using the updated domain credentials."
+        "text": "Resend the reset link from the admin console."
+      },
+      {
+        "sourceStepId": "KB-02-S4",
+        "order": 4,
+        "text": "Ask the mail admin to allow-list the sender."
       }
     ],
-    "validation": "User successfully logs into Payroll Portal without AUTH-401 prompt.",
-    "escalationCondition": "Escalate to Identity Operations if more than 5 users remain affected after 15 minutes.",
-    "keywords": ["AUTH-401", "password reset", "login", "payroll", "authentication"],
+    "validation": "Verify resolution of Password Reset per runbook.",
+    "escalationCondition": "Several users affected: escalate to Messaging team.",
+    "escalation": "Several users affected: escalate to Messaging team.",
+    "keywords": [
+      "Access",
+      "Password Reset",
+      "reset link email not arriving",
+      "no password reset mail",
+      "inbox empty"
+    ],
     "version": "1.0"
   },
   {
+    "id": "KB-03",
     "articleId": "KB-03",
-    "title": "Database Connection Pool Exhaustion (ERR_DB_POOL_EXHAUSTED)",
-    "category": "Database Operations",
-    "subcategory": "Connection Pool",
-    "symptoms": ["ERR_DB_POOL_EXHAUSTED", "HTTP 500", "Application slowdown", "Database connection timeout"],
-    "possibleCause": "Unclosed HikariCP database connections in backend microservice under high batch load.",
-    "prerequisites": ["Verify backend service deployment metrics."],
+    "title": "SSO login loop or expired token",
+    "category": "Access",
+    "subcategory": "SSO",
+    "symptoms": [
+      "redirected back to login page repeatedly",
+      "token expired",
+      "401 unauthorized",
+      "session timeout"
+    ],
+    "symptoms_raw": "redirected back to login page repeatedly, token expired, 401 unauthorized, session timeout",
+    "possibleCause": "Stale cookies or clock drift.",
+    "cause": "Stale cookies or clock drift.",
+    "prerequisites": [
+      "Browser access to the affected user."
+    ],
     "steps": [
       {
         "sourceStepId": "KB-03-S1",
         "order": 1,
-        "text": "Check active HikariCP connection count metrics on the Grafana dashboard."
+        "text": "Clear browser cookies and cache."
       },
       {
         "sourceStepId": "KB-03-S2",
         "order": 2,
-        "text": "Restart affected backend application node to release leaked connections."
+        "text": "Check the device clock is synced."
+      },
+      {
+        "sourceStepId": "KB-03-S3",
+        "order": 3,
+        "text": "Sign out of all sessions and sign in again."
+      },
+      {
+        "sourceStepId": "KB-03-S4",
+        "order": 4,
+        "text": "Check the identity provider certificate has not expired."
       }
     ],
-    "validation": "HikariPool active connections return to normal baseline (<15 active).",
-    "escalationCondition": "Escalate to Database Administration if pool exhausts again within 30 minutes.",
-    "keywords": ["ERR_DB_POOL_EXHAUSTED", "HikariCP", "connection pool", "database", "HTTP 500"],
+    "validation": "Verify resolution of SSO per runbook.",
+    "escalationCondition": "More than 10 users affected: escalate to Identity team.",
+    "escalation": "More than 10 users affected: escalate to Identity team.",
+    "keywords": [
+      "Access",
+      "SSO",
+      "redirected back to login page repeatedly",
+      "token expired",
+      "401 unauthorized"
+    ],
     "version": "1.0"
   },
   {
+    "id": "KB-04",
     "articleId": "KB-04",
-    "title": "SAP ERP License Key Expiration Notice (LIC-902)",
-    "category": "Enterprise Software",
-    "subcategory": "Licensing",
-    "symptoms": ["LIC-902", "SAP license expired", "Transaction code blocked"],
-    "possibleCause": "Annual SAP enterprise license key expired on host server.",
-    "prerequisites": ["Check license status in transaction SLICENSE."],
+    "title": "Report page loading very slowly",
+    "category": "Performance",
+    "subcategory": "Slow Response",
+    "symptoms": [
+      "report takes minutes to load",
+      "page timeout",
+      "high latency",
+      "slow screen"
+    ],
+    "symptoms_raw": "report takes minutes to load, page timeout, high latency, slow screen",
+    "possibleCause": "Large date range or missing database index.",
+    "cause": "Large date range or missing database index.",
+    "prerequisites": [
+      "Read access to database monitoring."
+    ],
     "steps": [
       {
         "sourceStepId": "KB-04-S1",
         "order": 1,
-        "text": "Log into SAP GUI with SAP* administrator credentials."
+        "text": "Ask the user to narrow the date range."
       },
       {
         "sourceStepId": "KB-04-S2",
         "order": 2,
-        "text": "Run transaction code SLICENSE and import renewed license key file."
+        "text": "Check long-running queries in the database monitor."
+      },
+      {
+        "sourceStepId": "KB-04-S3",
+        "order": 3,
+        "text": "Rebuild the index on the reporting table."
+      },
+      {
+        "sourceStepId": "KB-04-S4",
+        "order": 4,
+        "text": "Clear the application cache and retest."
       }
     ],
-    "validation": "Transaction SLICENSE shows valid status with future expiration date.",
-    "escalationCondition": "Escalate to IT Procurement if renewed key file is invalid or missing.",
-    "keywords": ["LIC-902", "SAP", "SLICENSE", "license expired", "ERP"],
+    "validation": "Verify resolution of Slow Response per runbook.",
+    "escalationCondition": "Slowness persists over 30 minutes: escalate to DBA team.",
+    "escalation": "Slowness persists over 30 minutes: escalate to DBA team.",
+    "keywords": [
+      "Performance",
+      "Slow Response",
+      "report takes minutes to load",
+      "page timeout",
+      "high latency"
+    ],
     "version": "1.0"
   },
   {
+    "id": "KB-05",
     "articleId": "KB-05",
-    "title": "Outlook Search Indexing Failure & Missing Emails",
-    "category": "Workplace Tools",
-    "subcategory": "Email & Office",
-    "symptoms": ["Outlook search not working", "Recent emails not found in search", "Indexing paused"],
-    "possibleCause": "Corrupted Windows Search Index catalog file.",
-    "prerequisites": ["Close Microsoft Outlook completely before troubleshooting."],
+    "title": "High CPU on application server",
+    "category": "Performance",
+    "subcategory": "Resource Usage",
+    "symptoms": [
+      "CPU at 95 percent",
+      "server unresponsive",
+      "thread pool exhausted",
+      "high load"
+    ],
+    "symptoms_raw": "CPU at 95 percent, server unresponsive, thread pool exhausted, high load",
+    "possibleCause": "Runaway process or faulty deployment.",
+    "cause": "Runaway process or faulty deployment.",
+    "prerequisites": [
+      "Server monitoring access."
+    ],
     "steps": [
       {
         "sourceStepId": "KB-05-S1",
         "order": 1,
-        "text": "Open Control Panel -> Indexing Options -> Advanced."
+        "text": "Identify the top CPU process."
       },
       {
         "sourceStepId": "KB-05-S2",
         "order": 2,
-        "text": "Click 'Rebuild' under Index Settings and confirm prompt."
+        "text": "Capture a thread dump."
+      },
+      {
+        "sourceStepId": "KB-05-S3",
+        "order": 3,
+        "text": "Check for a deployment in the last 24 hours."
+      },
+      {
+        "sourceStepId": "KB-05-S4",
+        "order": 4,
+        "text": "Perform a rolling restart of the service."
       }
     ],
-    "validation": "Outlook search status reports 'Indexing Complete'.",
-    "escalationCondition": "Escalate to Desktop Support if rebuild option is grayed out.",
-    "keywords": ["Outlook", "indexing", "search", "email", "Windows Search"],
+    "validation": "Verify resolution of Resource Usage per runbook.",
+    "escalationCondition": "CPU stays high after restart: escalate to Platform team.",
+    "escalation": "CPU stays high after restart: escalate to Platform team.",
+    "keywords": [
+      "Performance",
+      "Resource Usage",
+      "CPU at 95 percent",
+      "server unresponsive",
+      "thread pool exhausted"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-06",
+    "articleId": "KB-06",
+    "title": "Nightly batch job failed",
+    "category": "Batch",
+    "subcategory": "Job Failure",
+    "symptoms": [
+      "batch job failed",
+      "scheduler alert",
+      "exit code 1",
+      "nightly job aborted"
+    ],
+    "symptoms_raw": "batch job failed, scheduler alert, exit code 1, nightly job aborted",
+    "possibleCause": "Missing input file or failed step.",
+    "cause": "Missing input file or failed step.",
+    "prerequisites": [
+      "Scheduler console access."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-06-S1",
+        "order": 1,
+        "text": "Open the scheduler log and find the failing step."
+      },
+      {
+        "sourceStepId": "KB-06-S2",
+        "order": 2,
+        "text": "Check the input file exists and is not empty."
+      },
+      {
+        "sourceStepId": "KB-06-S3",
+        "order": 3,
+        "text": "Fix the cause of the failure."
+      },
+      {
+        "sourceStepId": "KB-06-S4",
+        "order": 4,
+        "text": "Rerun the job from the failed step."
+      }
+    ],
+    "validation": "Verify resolution of Job Failure per runbook.",
+    "escalationCondition": "Second consecutive failure: escalate to Batch support.",
+    "escalation": "Second consecutive failure: escalate to Batch support.",
+    "keywords": [
+      "Batch",
+      "Job Failure",
+      "batch job failed",
+      "scheduler alert",
+      "exit code 1"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-07",
+    "articleId": "KB-07",
+    "title": "Batch job stuck in running state",
+    "category": "Batch",
+    "subcategory": "Job Hang",
+    "symptoms": [
+      "job running for hours",
+      "no progress",
+      "stuck",
+      "database lock",
+      "hung process"
+    ],
+    "symptoms_raw": "job running for hours, no progress, stuck, database lock, hung process",
+    "possibleCause": "Database lock or unfinished dependent job.",
+    "cause": "Database lock or unfinished dependent job.",
+    "prerequisites": [
+      "Scheduler and database access."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-07-S1",
+        "order": 1,
+        "text": "Check blocking locks in the database."
+      },
+      {
+        "sourceStepId": "KB-07-S2",
+        "order": 2,
+        "text": "Verify the upstream job finished."
+      },
+      {
+        "sourceStepId": "KB-07-S3",
+        "order": 3,
+        "text": "Stop the hung process as per the runbook."
+      },
+      {
+        "sourceStepId": "KB-07-S4",
+        "order": 4,
+        "text": "Rerun the job."
+      }
+    ],
+    "validation": "Verify resolution of Job Hang per runbook.",
+    "escalationCondition": "Job holds a production lock: escalate to DBA team.",
+    "escalation": "Job holds a production lock: escalate to DBA team.",
+    "keywords": [
+      "Batch",
+      "Job Hang",
+      "job running for hours",
+      "no progress",
+      "stuck"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-08",
+    "articleId": "KB-08",
+    "title": "Partner API returns 503 or timeout",
+    "category": "Interface",
+    "subcategory": "API Timeout",
+    "symptoms": [
+      "503 service unavailable",
+      "gateway timeout",
+      "connection refused",
+      "partner endpoint not responding"
+    ],
+    "symptoms_raw": "503 service unavailable, gateway timeout, connection refused, partner endpoint not responding",
+    "possibleCause": "Partner endpoint down, expired certificate or firewall rule.",
+    "cause": "Partner endpoint down, expired certificate or firewall rule.",
+    "prerequisites": [
+      "Gateway log access."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-08-S1",
+        "order": 1,
+        "text": "Check the partner endpoint health status."
+      },
+      {
+        "sourceStepId": "KB-08-S2",
+        "order": 2,
+        "text": "Verify the TLS certificate validity."
+      },
+      {
+        "sourceStepId": "KB-08-S3",
+        "order": 3,
+        "text": "Confirm firewall rules allow the traffic."
+      },
+      {
+        "sourceStepId": "KB-08-S4",
+        "order": 4,
+        "text": "Retry with exponential backoff."
+      }
+    ],
+    "validation": "Verify resolution of API Timeout per runbook.",
+    "escalationCondition": "Partner confirms outage: notify the interface owner.",
+    "escalation": "Partner confirms outage: notify the interface owner.",
+    "keywords": [
+      "Interface",
+      "API Timeout",
+      "503 service unavailable",
+      "gateway timeout",
+      "connection refused"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-09",
+    "articleId": "KB-09",
+    "title": "Interface file rejected as malformed",
+    "category": "Interface",
+    "subcategory": "File Format",
+    "symptoms": [
+      "SFTP file rejected",
+      "schema validation error",
+      "invalid delimiter",
+      "wrong encoding"
+    ],
+    "symptoms_raw": "SFTP file rejected, schema validation error, invalid delimiter, wrong encoding",
+    "possibleCause": "File does not match the interface specification.",
+    "cause": "File does not match the interface specification.",
+    "prerequisites": [
+      "Interface specification document."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-09-S1",
+        "order": 1,
+        "text": "Validate the file against the specification."
+      },
+      {
+        "sourceStepId": "KB-09-S2",
+        "order": 2,
+        "text": "Check encoding is UTF-8 and the delimiter is correct."
+      },
+      {
+        "sourceStepId": "KB-09-S3",
+        "order": 3,
+        "text": "Ask the sender to regenerate the file."
+      },
+      {
+        "sourceStepId": "KB-09-S4",
+        "order": 4,
+        "text": "Reprocess the corrected file."
+      }
+    ],
+    "validation": "Verify resolution of File Format per runbook.",
+    "escalationCondition": "Same sender fails 3 times: escalate to Interface owner.",
+    "escalation": "Same sender fails 3 times: escalate to Interface owner.",
+    "keywords": [
+      "Interface",
+      "File Format",
+      "SFTP file rejected",
+      "schema validation error",
+      "invalid delimiter"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-10",
+    "articleId": "KB-10",
+    "title": "Duplicate records after data load",
+    "category": "Data",
+    "subcategory": "Duplicates",
+    "symptoms": [
+      "duplicate rows",
+      "repeated customer entries",
+      "same record twice after load"
+    ],
+    "symptoms_raw": "duplicate rows, repeated customer entries, same record twice after load",
+    "possibleCause": "Load executed twice or missing unique constraint.",
+    "cause": "Load executed twice or missing unique constraint.",
+    "prerequisites": [
+      "Database read access and approved cleanup script."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-10-S1",
+        "order": 1,
+        "text": "Find the load ID that created the duplicates."
+      },
+      {
+        "sourceStepId": "KB-10-S2",
+        "order": 2,
+        "text": "Run the duplicate query on the business key."
+      },
+      {
+        "sourceStepId": "KB-10-S3",
+        "order": 3,
+        "text": "Remove duplicates using the approved script."
+      },
+      {
+        "sourceStepId": "KB-10-S4",
+        "order": 4,
+        "text": "Add a unique key check to the load."
+      }
+    ],
+    "validation": "Verify resolution of Duplicates per runbook.",
+    "escalationCondition": "More than 1000 rows affected: escalate to Data team.",
+    "escalation": "More than 1000 rows affected: escalate to Data team.",
+    "keywords": [
+      "Data",
+      "Duplicates",
+      "duplicate rows",
+      "repeated customer entries",
+      "same record twice after load"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-11",
+    "articleId": "KB-11",
+    "title": "Dashboard shows missing data after refresh",
+    "category": "Data",
+    "subcategory": "Missing Data",
+    "symptoms": [
+      "dashboard empty",
+      "totals zero",
+      "records missing after refresh",
+      "no data shown"
+    ],
+    "symptoms_raw": "dashboard empty, totals zero, records missing after refresh, no data shown",
+    "possibleCause": "ETL load incomplete or stale materialized view.",
+    "cause": "ETL load incomplete or stale materialized view.",
+    "prerequisites": [
+      "ETL monitor access."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-11-S1",
+        "order": 1,
+        "text": "Confirm the ETL load completed."
+      },
+      {
+        "sourceStepId": "KB-11-S2",
+        "order": 2,
+        "text": "Compare source and target row counts."
+      },
+      {
+        "sourceStepId": "KB-11-S3",
+        "order": 3,
+        "text": "Refresh the materialized view."
+      },
+      {
+        "sourceStepId": "KB-11-S4",
+        "order": 4,
+        "text": "Reprocess the failed partition."
+      }
+    ],
+    "validation": "Verify resolution of Missing Data per runbook.",
+    "escalationCondition": "Row counts still differ: escalate to Data team.",
+    "escalation": "Row counts still differ: escalate to Data team.",
+    "keywords": [
+      "Data",
+      "Missing Data",
+      "dashboard empty",
+      "totals zero",
+      "records missing after refresh"
+    ],
+    "version": "1.0"
+  },
+  {
+    "id": "KB-12",
+    "articleId": "KB-12",
+    "title": "PDF export fails or downloads blank",
+    "category": "Data",
+    "subcategory": "Export Failure",
+    "symptoms": [
+      "export button error",
+      "PDF blank",
+      "download fails",
+      "report export not generated"
+    ],
+    "symptoms_raw": "export button error, PDF blank, download fails, report export not generated",
+    "possibleCause": "Low temp disk space or stuck export queue.",
+    "cause": "Low temp disk space or stuck export queue.",
+    "prerequisites": [
+      "Server access."
+    ],
+    "steps": [
+      {
+        "sourceStepId": "KB-12-S1",
+        "order": 1,
+        "text": "Check free disk space on the temp volume."
+      },
+      {
+        "sourceStepId": "KB-12-S2",
+        "order": 2,
+        "text": "Clear the export queue."
+      },
+      {
+        "sourceStepId": "KB-12-S3",
+        "order": 3,
+        "text": "Retry with a smaller data range."
+      },
+      {
+        "sourceStepId": "KB-12-S4",
+        "order": 4,
+        "text": "Confirm the PDF opens correctly."
+      }
+    ],
+    "validation": "Verify resolution of Export Failure per runbook.",
+    "escalationCondition": "Disk cannot be freed: escalate to Platform team.",
+    "escalation": "Disk cannot be freed: escalate to Platform team.",
+    "keywords": [
+      "Data",
+      "Export Failure",
+      "export button error",
+      "PDF blank",
+      "download fails"
+    ],
     "version": "1.0"
   }
 ]

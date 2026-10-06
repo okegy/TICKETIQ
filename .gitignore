@@ -1,27 +1,45 @@
+# ── Secrets ────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ── Frontend (Angular) ─────────────────────────────
 node_modules/
 dist/
 .angular/
+coverage/
+playwright-report/
+test-results/
 
-# Backend
+# ── Backend (Spring Boot / Gradle) ─────────────────
 build/
 .gradle/
 out/
 target/
 
-# Python
+# ── Python AI service ──────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 .venv/
 venv/
 env/
-.env
+.pytest_cache/
 
-# IDE
+# ── Large / derived data (see README -> Datasets) ──
+data/datasets/*.csv
+data/generated/
+
+# ── Local agent-skill clones (external repos) ──────
+.agents/
+
+# ── IDE / OS ───────────────────────────────────────
 .idea/
 .vscode/
 *.swp
-
-# OS
 .DS_Store
 Thumbs.db
+
+# ── Logs ───────────────────────────────────────────
+*.log
+npm-debug.log*

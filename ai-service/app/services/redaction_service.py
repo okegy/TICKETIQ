@@ -14,9 +14,10 @@ class RedactionService:
         ip_pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
         redacted = re.sub(ip_pattern, '[REDACTED_IP]', redacted)
 
-        # 3. Phone Number Redaction (various formats)
+        # 3. Phone Number Redaction (10-digit and 7-digit local formats)
         phone_pattern = r'\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b'
         redacted = re.sub(phone_pattern, '[REDACTED_PHONE]', redacted)
+        redacted = re.sub(r'\b\d{3}[-.\s]\d{4}\b', '[REDACTED_PHONE]', redacted)
 
         # 4. Bearer Tokens & API Keys
         token_pattern = r'(?i)(bearer\s+[a-zA-Z0-9\-\._~\+\/]+=*|api[_-]?key[:=]\s*[a-zA-Z0-9_\-]+)'

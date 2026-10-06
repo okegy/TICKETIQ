@@ -11,7 +11,7 @@ def test_health_check():
 def test_analyze_ticket_success():
     payload = {
         "ticketId": "INC-1001",
-        "ticketText": "Payroll portal login failing with AUTH-401 error after password reset for user john.doe@example.com",
+        "ticketText": "User cannot log in, account locked after too many failed login attempts. Contact john.doe@example.com",
         "confidenceThreshold": 0.1
     }
     response = client.post("/ai/analyze-ticket", json=payload)
@@ -20,7 +20,9 @@ def test_analyze_ticket_success():
     assert data["decision"] == "DRAFT_ALLOWED"
     assert "[REDACTED_EMAIL]" in data["redactedText"]
     assert len(data["resolutionSteps"]) > 0
-    assert data["classification"]["category"] == "Access Management"
+    assert data["classification"]["category"] == "Access"
+    assert data["classification"]["subcategory"] == "Account Lockout"
+    assert data["resolutionSteps"][0]["sourceArticleId"] == "KB-01"
 
 def test_analyze_ticket_no_match():
     payload = {

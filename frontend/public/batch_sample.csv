@@ -1,0 +1,11 @@
+ticketId,ticketText,application
+INC-T001,User cannot log in — account locked after too many failed login attempts.,Identity Admin Console
+INC-T002,Password reset email not received. User requested reset twice and nothing arrived.,Identity Portal
+INC-T003,Nightly batch job failed during the reconciliation step. Needs investigation and re-run.,Batch Scheduler
+INC-T004,Partner API returning 503 timeout errors for the last 2 hours. Integration team alerted.,Integration Gateway
+INC-T005,Report dashboard missing data for Q3. Finance team cannot close period-end.,Reporting Suite
+INC-T006,The coffee machine on 4th floor is out of espresso beans.,Facility Support
+INC-T007,SSO login loop — users redirected repeatedly after authentication.,Identity Portal
+INC-T008,High CPU utilisation on APPSVR-04 causing slow report page loads.,Application Server
+INC-T009,Nightly job stuck in RUNNING state for over 6 hours. Thread dump attached.,Batch Scheduler
+INC-T010,Interface file rejected by downstream system — invalid schema header.,Integration Gateway

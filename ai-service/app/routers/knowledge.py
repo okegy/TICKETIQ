@@ -15,6 +15,32 @@ class KnowledgeGapRequest(BaseModel):
     noMatchTickets: List[Dict[str, Any]]
     minClusterSize: int = 2
 
+@router.get("/knowledge-articles")
+def list_knowledge_articles():
+    # Reuse the retriever's loaded KB seed so the UI and the AI
+    # pipeline always serve the same article catalog.
+    from app.routers.analysis import retriever
+    return {
+        "count": len(retriever.articles),
+        "articles": [
+            {
+                "articleId": art.get("articleId") or art.get("id"),
+                "title": art.get("title"),
+                "category": art.get("category"),
+                "subcategory": art.get("subcategory"),
+                "symptoms": art.get("symptoms", []),
+                "possibleCause": art.get("possibleCause") or art.get("cause", ""),
+                "prerequisites": art.get("prerequisites", []),
+                "steps": art.get("steps", []),
+                "validation": art.get("validation", ""),
+                "escalationCondition": art.get("escalationCondition") or art.get("escalation", ""),
+                "keywords": art.get("keywords", []),
+                "version": art.get("version", "1.0")
+            }
+            for art in retriever.articles
+        ]
+    }
+
 @router.post("/find-duplicates")
 def find_duplicates(request: DuplicateCheckRequest):
     matches = DuplicateService.find_duplicates(

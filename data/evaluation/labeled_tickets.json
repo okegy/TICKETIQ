@@ -1,0 +1,22 @@
+[
+{"id":"S-01","type":"clean","description":"User locked out, too many failed login attempts","error_text":"Account locked","expect_matched":true,"expect_category":"Access","expect_article":"KB-01"},
+{"id":"S-02","type":"paraphrased","description":"My account got blocked after I typed the wrong password several times","error_text":"","expect_matched":true,"expect_category":"Access","expect_article":"KB-01"},
+{"id":"S-03","type":"paraphrased","description":"Reset link never arrives in my email","error_text":"","expect_matched":true,"expect_category":"Access","expect_article":"KB-02"},
+{"id":"S-04","type":"clean","description":"Monthly sales report takes several minutes to open and times out","error_text":"","expect_matched":true,"expect_category":"Performance","expect_article":"KB-04"},
+{"id":"S-05","type":"clean","description":"Nightly batch job failed, scheduler sent alert","error_text":"exit code 1","expect_matched":true,"expect_category":"Batch","expect_article":"KB-06"},
+{"id":"S-06","type":"clean","description":"Partner API gateway timeout, connection refused","error_text":"503 service unavailable","expect_matched":true,"expect_category":"Interface","expect_article":"KB-08"},
+{"id":"S-07","type":"clean","description":"Duplicate customer records appeared after yesterday's load","error_text":"","expect_matched":true,"expect_category":"Data","expect_article":"KB-10"},
+{"id":"S-08","type":"ambiguous","description":"Cannot open the report, it hangs and then logs me out","error_text":"","expect_matched":true,"expect_category":"Performance or Access","expect_article":"KB-04 or KB-03 (accept either; confidence should be lower than clean tickets)"},
+{"id":"S-09","type":"pii","description":"ravi.k@corp.example is locked out, password: Test@12345, call 9876543210, see http://intranet.corp.local/ticket/9","error_text":"","expect_matched":true,"expect_category":"Access","expect_article":"KB-01","expect_redacted":["ravi.k@corp.example","Test@12345","9876543210","http://intranet.corp.local/ticket/9"]},
+{"id":"S-10","type":"no-match","description":"Third floor office printer shows paper jam","error_text":"","expect_matched":false},
+{"id":"S-11","type":"no-match","description":"Need a new keyboard and mouse for my desk","error_text":"","expect_matched":false},
+{"id":"S-12","type":"no-match","description":"Conference room projector flickers during meetings","error_text":"","expect_matched":false},
+{"id":"S-13","type":"no-match","description":"Teams audio crackles during calls with headset","error_text":"","expect_matched":false},
+{"id":"S-14","type":"no-match","description":"Cafeteria badge reader keeps beeping","error_text":"","expect_matched":false},
+{"id":"S-15","type":"no-match","description":"Request design software license for new joiner","error_text":"","expect_matched":false},
+{"id":"E-01","type":"edge-empty","description":"","error_text":"","expect_behavior":"validation message, no crash, no result"},
+{"id":"E-02","type":"edge-gibberish","description":"asdf qwerty zxcv 12345","error_text":"","expect_matched":false},
+{"id":"E-03","type":"edge-whitespace","description":"      ","error_text":"","expect_behavior":"treated as empty"},
+{"id":"E-04","type":"edge-long","description":"LONG_TEXT: repeat 'account locked too many failed login attempts ' 200 times","error_text":"","expect_matched":true,"expect_article":"KB-01","expect_behavior":"no crash or freeze, layout intact"},
+{"id":"E-05","type":"edge-special-chars","description":"Login <script>alert(1)</script> failed ' OR 1=1 -- locked","error_text":"","expect_behavior":"no script runs, no crash, text shown safely"}
+]

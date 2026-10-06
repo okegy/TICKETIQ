@@ -8,6 +8,7 @@ class TicketAnalysisRequest(BaseModel):
     topK: int = 3
     confidenceThreshold: float = 0.62
     retrievalMode: str = "hybrid"
+    language: str = "auto"  # 'auto' | 'en' | 'hi' | 'ta'
 
 class ExtractedFields(BaseModel):
     application: Optional[str] = None
@@ -57,6 +58,26 @@ class AnalysisConfiguration(BaseModel):
     threshold: float
     promptVersion: str
 
+class DatasetSignal(BaseModel):
+    queue: Optional[str] = None
+    confidence: float = 0.0
+    basedOn: int = 0
+    similarTickets: List[Dict[str, Any]] = []
+
+class LanguageInfo(BaseModel):
+    code: str
+    name: str
+    native: str
+    requested: str
+
+class LocalizedMessages(BaseModel):
+    decisionMessage: str
+    escalationSuggestion: str
+    sanitizedNote: str
+    kbNote: str
+    datasetSignalLabel: str
+    detectedLanguageLabel: str
+
 class TicketAnalysisResponse(BaseModel):
     decision: str
     redactedText: str
@@ -69,3 +90,6 @@ class TicketAnalysisResponse(BaseModel):
     escalation: Escalation
     possibleDuplicates: List[str] = []
     configuration: AnalysisConfiguration
+    language: LanguageInfo
+    localized: LocalizedMessages
+    datasetSignal: DatasetSignal

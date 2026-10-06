@@ -25,10 +25,17 @@ class TfidfRetriever:
 
         corpus = []
         for art in self.articles:
-            # Combine title, symptoms, cause, keywords into indexed document
-            symptoms_text = " ".join(art.get("symptoms", []))
-            keywords_text = " ".join(art.get("keywords", []))
-            doc = f"{art.get('title', '')} {symptoms_text} {art.get('possibleCause', '')} {keywords_text}"
+            symptoms = art.get("symptoms", "")
+            symptoms_text = " ".join(symptoms) if isinstance(symptoms, list) else str(symptoms)
+            cause = art.get("cause", "") or art.get("possibleCause", "")
+            steps = art.get("steps", [])
+            if isinstance(steps, list):
+                steps_text = " ".join([s if isinstance(s, str) else s.get("text", "") for s in steps])
+            else:
+                steps_text = str(steps)
+            keywords = art.get("keywords", [])
+            keywords_text = " ".join(keywords) if isinstance(keywords, list) else str(keywords)
+            doc = f"{art.get('title', '')} {art.get('category', '')} {art.get('subcategory', '')} {symptoms_text} {cause} {steps_text} {keywords_text}"
             corpus.append(doc)
 
         self.tfidf_matrix = self.vectorizer.fit_transform(corpus)
@@ -44,9 +51,10 @@ class TfidfRetriever:
         results = []
         for idx in top_indices:
             score = float(scores[idx])
-            if score > 0.05:  # Relevance threshold
-                article = self.articles[idx].copy()
-                article["tfidfScore"] = score
-                results.append(article)
+            article = self.articles[idx].copy()
+            article["tfidfScore"] = round(score, 4)
+            article["articleId"] = article.get("articleId") or article.get("id", f"KB-{idx+1:02d}")
+            article["id"] = article["articleId"]
+            results.append(article)
 
         return results
