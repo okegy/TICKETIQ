@@ -8,10 +8,35 @@
         <p class="tagline">Evidence-Gated IT Support Copilot</p>
       </div>
     </div>
-    <div class="badge-status">
-      <span class="pulse"></span> System Operational
+    <div class="header-right">
+      <button class="btn-secondary" (click)="showIntelligence = !showIntelligence">
+        💡 {{ showIntelligence ? 'Hide Knowledge Intelligence' : 'Knowledge Intelligence (Bonus)' }}
+      </button>
+      <div class="badge-status">
+        <span class="pulse"></span> System Operational
+      </div>
     </div>
   </header>
+
+  <!-- Knowledge Intelligence Panel (Bonus Feature) -->
+  <div *ngIf="showIntelligence" class="intelligence-panel card">
+    <h3>🧠 Continuous Knowledge Improvement Engine</h3>
+    <p class="subtext">Identifies recurring patterns among unmatched tickets and recommends new Knowledge Base articles.</p>
+    
+    <div *ngIf="knowledgeGaps.length === 0" class="empty-state-sm">
+      Analyzing incident clusters...
+    </div>
+
+    <div class="gap-grid">
+      <div *ngFor="let gap of knowledgeGaps" class="gap-card">
+        <div class="gap-badge">🚨 Proposed Article Topic</div>
+        <h4>{{ gap.proposedTopic }}</h4>
+        <p><strong>Keyword Pattern:</strong> <span class="tag-keyword">{{ gap.patternKeyword }}</span></p>
+        <p class="gap-rec">{{ gap.recommendation }}</p>
+        <span class="gap-count">Triggered by {{ gap.affectedTicketCount }} unmatched incidents</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Main Content Grid -->
   <div class="grid-layout">
@@ -49,11 +74,30 @@
       <div *ngIf="errorMessage" class="alert alert-error">
         ⚠️ {{ errorMessage }}
       </div>
+
+      <!-- Duplicate Detection Warning (Bonus Feature) -->
+      <div *ngIf="duplicates.length > 0" class="duplicate-box">
+        <h4>⚠️ Potential Duplicate Tickets Detected</h4>
+        <div *ngFor="let dup of duplicates" class="dup-item">
+          <div class="dup-header">
+            <strong>{{ dup.ticketId }}</strong>: {{ dup.title }}
+            <span class="dup-score">{{ dup.similarityScore * 100 }}% Match</span>
+          </div>
+          <small>Status: {{ dup.status }}</small>
+        </div>
+      </div>
     </div>
 
     <!-- Right Column: Results & Grounding -->
     <div class="card results-card">
-      <h2>🎯 Decision & Evidence Grounding</h2>
+      <div class="results-header">
+        <h2>🎯 Decision & Evidence Grounding</h2>
+        <span class="status-pill status-{{ ticketStatus.toLowerCase() }}">{{ ticketStatus }}</span>
+      </div>
+
+      <div *ngIf="actionMessage" class="action-alert">
+        {{ actionMessage }}
+      </div>
 
       <div *ngIf="!analysisResult && !loading" class="empty-state">
         <span>📋</span>
@@ -85,14 +129,17 @@
             <span class="chip">🎯 Confidence: <strong>{{ analysisResult.classification.confidence * 100 }}%</strong></span>
           </div>
 
-          <!-- Resolution Steps -->
+          <!-- Resolution Steps (Editable by Analyst) -->
           <div class="section-box">
-            <h4>💡 Source-Grounded Resolution Steps</h4>
+            <div class="section-header-flex">
+              <h4>💡 Source-Grounded Resolution Steps</h4>
+              <span class="badge-edit">✏️ Analyst Editable</span>
+            </div>
             <div class="steps-list">
               <div *ngFor="let step of analysisResult.resolutionSteps" class="step-card">
                 <div class="step-num">{{ step.stepNumber }}</div>
                 <div class="step-body">
-                  <p class="step-text">{{ step.instruction }}</p>
+                  <input type="text" class="step-input" [(ngModel)]="step.instruction" />
                   <div class="step-meta">
                     <span class="tag-source">📖 Source: {{ step.sourceArticleId }} ({{ step.sourceSection }})</span>
                     <span class="tag-verified">✔ {{ step.verificationStatus }}</span>
@@ -106,6 +153,28 @@
           <div *ngIf="analysisResult.escalation.required" class="alert alert-warning">
             🚨 <strong>Escalation Rule Triggered:</strong> {{ analysisResult.escalation.condition }}
             <br><small>Source: {{ analysisResult.escalation.sourceArticleId }}</small>
+          </div>
+
+          <!-- Analyst Human-in-the-Loop Actions -->
+          <div class="workflow-actions">
+            <h4>✍️ Analyst Final Sign-off</h4>
+            <div class="btn-group">
+              <button class="btn-action btn-approve" (click)="approveResolution()">
+                ✅ Approve Resolution
+              </button>
+              <button class="btn-action btn-reject" (click)="rejectResolution()">
+                🚫 Reject & Escalate to Tier-2
+              </button>
+            </div>
+          </div>
+
+          <!-- Feedback Mechanism -->
+          <div class="feedback-box">
+            <span>Was this AI-grounded resolution helpful?</span>
+            <div class="thumb-buttons">
+              <button class="btn-thumb" [class.active]="feedbackHelpful === true" (click)="submitFeedback(true)">👍 Yes</button>
+              <button class="btn-thumb" [class.active]="feedbackHelpful === false" (click)="submitFeedback(false)">👎 No</button>
+            </div>
           </div>
         </div>
       </div>
