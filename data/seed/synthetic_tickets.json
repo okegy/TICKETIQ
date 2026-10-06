@@ -1,0 +1,102 @@
+[
+  {
+    "ticketId": "INC-2001",
+    "title": "Cannot log in to Payroll Portal after reset",
+    "description": "I reset my password 20 minutes ago but still getting AUTH-401 when trying to access the payroll portal. User email: alice.smith@acme.corp, phone: +1-555-0143.",
+    "application": "Payroll Portal",
+    "expectedCategory": "Access Management",
+    "expectedSubcategory": "Password Synchronization",
+    "expectedArticleId": "KB-02",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2002",
+    "title": "GlobalProtect VPN connection timeout",
+    "description": "Unable to connect to corporate VPN from home network. Client gives ERR_GATEWAY_UNREACHABLE error. IP address: 192.168.1.45.",
+    "application": "GlobalProtect",
+    "expectedCategory": "Network & Access",
+    "expectedSubcategory": "VPN",
+    "expectedArticleId": "KB-01",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2003",
+    "title": "Database connection pool exhausted during batch run",
+    "description": "Nightly reconciliation job failed with ERR_DB_POOL_EXHAUSTED and HTTP 500 on port 8080. Multiple threads waiting for HikariCP connection.",
+    "application": "Reconciliation Engine",
+    "expectedCategory": "Database Operations",
+    "expectedSubcategory": "Connection Pool",
+    "expectedArticleId": "KB-03",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2004",
+    "title": "SAP transaction blocked - license key expired",
+    "description": "Users attempting to access finance module receive error code LIC-902 stating enterprise license has expired. Contact finance lead at bob@acme.corp.",
+    "application": "SAP ERP",
+    "expectedCategory": "Enterprise Software",
+    "expectedSubcategory": "Licensing",
+    "expectedArticleId": "KB-04",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2005",
+    "title": "Outlook search not returning any recent emails",
+    "description": "Search in Outlook is completely broken. Status shows indexing paused or incomplete. Missing critical emails from yesterday.",
+    "application": "Microsoft Outlook",
+    "expectedCategory": "Workplace Tools",
+    "expectedSubcategory": "Email & Office",
+    "expectedArticleId": "KB-05",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2006",
+    "title": "Cafeteria digital menu board offline",
+    "description": "The cafeteria screen in building B is showing a black screen. Needs physical reset or power check.",
+    "application": "Facility AV",
+    "expectedCategory": "General IT",
+    "expectedSubcategory": "Unclassified",
+    "expectedArticleId": null,
+    "expectedDecision": "NO_RELIABLE_MATCH"
+  },
+  {
+    "ticketId": "INC-2007",
+    "title": "Duplicate: VPN failure with gateway unreachable",
+    "description": "GlobalProtect won't connect, gives ERR_GATEWAY_UNREACHABLE on gateway us-east.corp.net. Same issue reported earlier.",
+    "application": "GlobalProtect",
+    "expectedCategory": "Network & Access",
+    "expectedSubcategory": "VPN",
+    "expectedArticleId": "KB-01",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2008",
+    "title": "Payroll AUTH-401 for multiple finance users",
+    "description": "Five team members in accounting got locked out after company-wide credential rotation with AUTH-401 error code.",
+    "application": "Payroll Portal",
+    "expectedCategory": "Access Management",
+    "expectedSubcategory": "Password Synchronization",
+    "expectedArticleId": "KB-02",
+    "expectedDecision": "DRAFT_ALLOWED"
+  },
+  {
+    "ticketId": "INC-2009",
+    "title": "Quantum satellite telemetry link down",
+    "description": "Deep space antenna frequency synchronization loss. Subspace channel 4 disrupted.",
+    "application": "Space Operations",
+    "expectedCategory": "General IT",
+    "expectedSubcategory": "Unclassified",
+    "expectedArticleId": null,
+    "expectedDecision": "NO_RELIABLE_MATCH"
+  },
+  {
+    "ticketId": "INC-2010",
+    "title": "HikariCP pool leak causing backend microservice freeze",
+    "description": "Production billing service threw ERR_DB_POOL_EXHAUSTED. Connection pool active count hit 100 maximum limit.",
+    "application": "Billing Service",
+    "expectedCategory": "Database Operations",
+    "expectedSubcategory": "Connection Pool",
+    "expectedArticleId": "KB-03",
+    "expectedDecision": "DRAFT_ALLOWED"
+  }
+]

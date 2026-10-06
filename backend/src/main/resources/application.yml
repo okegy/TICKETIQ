@@ -1,0 +1,32 @@
+server:
+  port: ${BACKEND_PORT:8080}
+
+spring:
+  application:
+    name: TicketIQ
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ticketiq}?createDatabaseIfNotExist=true&useSSL=false
+    username: ${MYSQL_USER:ticketiq_user}
+    password: ${MYSQL_PASSWORD:ticketiq_pass}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/ticketiq}
+
+ticketiq:
+  ai-service:
+    url: ${BACKEND_AI_SERVICE_URL:http://localhost:8000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

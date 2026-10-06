@@ -1,0 +1,132 @@
+[
+  {
+    "articleId": "KB-01",
+    "title": "VPN Connection Timeout - GlobalProtect Gateway Unreachable",
+    "category": "Network & Access",
+    "subcategory": "VPN",
+    "symptoms": ["VPN timeout", "ERR_GATEWAY_UNREACHABLE", "GlobalProtect fails to connect"],
+    "possibleCause": "Stale gateway profile or client firewall blocking port 443.",
+    "prerequisites": ["Ensure active internet connection outside VPN."],
+    "steps": [
+      {
+        "sourceStepId": "KB-01-S1",
+        "order": 1,
+        "text": "Open GlobalProtect settings, go to Network, and select Refresh Connection."
+      },
+      {
+        "sourceStepId": "KB-01-S2",
+        "order": 2,
+        "text": "If unresolved, clear DNS cache using 'ipconfig /flushdns' in command prompt."
+      }
+    ],
+    "validation": "GlobalProtect status shows Connected.",
+    "escalationCondition": "Escalate to Network Operations if error code ERR_GATEWAY_UNREACHABLE persists after DNS flush.",
+    "keywords": ["VPN", "GlobalProtect", "ERR_GATEWAY_UNREACHABLE", "network", "timeout"],
+    "version": "1.0"
+  },
+  {
+    "articleId": "KB-02",
+    "title": "Payroll Portal Authentication Failure After Password Reset (AUTH-401)",
+    "category": "Access Management",
+    "subcategory": "Password Synchronization",
+    "symptoms": ["AUTH-401", "Login failure after password reset", "Payroll portal access denied"],
+    "possibleCause": "Directory password synchronization delay across identity domain controllers.",
+    "prerequisites": ["Use approved identity verification procedure before supporting account reset."],
+    "steps": [
+      {
+        "sourceStepId": "KB-02-S1",
+        "order": 1,
+        "text": "Verify directory password synchronization status for the affected user."
+      },
+      {
+        "sourceStepId": "KB-02-S2",
+        "order": 2,
+        "text": "Instruct user to clear browser cache and stored web credentials."
+      },
+      {
+        "sourceStepId": "KB-02-S3",
+        "order": 3,
+        "text": "Have user attempt login again using the updated domain credentials."
+      }
+    ],
+    "validation": "User successfully logs into Payroll Portal without AUTH-401 prompt.",
+    "escalationCondition": "Escalate to Identity Operations if more than 5 users remain affected after 15 minutes.",
+    "keywords": ["AUTH-401", "password reset", "login", "payroll", "authentication"],
+    "version": "1.0"
+  },
+  {
+    "articleId": "KB-03",
+    "title": "Database Connection Pool Exhaustion (ERR_DB_POOL_EXHAUSTED)",
+    "category": "Database Operations",
+    "subcategory": "Connection Pool",
+    "symptoms": ["ERR_DB_POOL_EXHAUSTED", "HTTP 500", "Application slowdown", "Database connection timeout"],
+    "possibleCause": "Unclosed HikariCP database connections in backend microservice under high batch load.",
+    "prerequisites": ["Verify backend service deployment metrics."],
+    "steps": [
+      {
+        "sourceStepId": "KB-03-S1",
+        "order": 1,
+        "text": "Check active HikariCP connection count metrics on the Grafana dashboard."
+      },
+      {
+        "sourceStepId": "KB-03-S2",
+        "order": 2,
+        "text": "Restart affected backend application node to release leaked connections."
+      }
+    ],
+    "validation": "HikariPool active connections return to normal baseline (<15 active).",
+    "escalationCondition": "Escalate to Database Administration if pool exhausts again within 30 minutes.",
+    "keywords": ["ERR_DB_POOL_EXHAUSTED", "HikariCP", "connection pool", "database", "HTTP 500"],
+    "version": "1.0"
+  },
+  {
+    "articleId": "KB-04",
+    "title": "SAP ERP License Key Expiration Notice (LIC-902)",
+    "category": "Enterprise Software",
+    "subcategory": "Licensing",
+    "symptoms": ["LIC-902", "SAP license expired", "Transaction code blocked"],
+    "possibleCause": "Annual SAP enterprise license key expired on host server.",
+    "prerequisites": ["Check license status in transaction SLICENSE."],
+    "steps": [
+      {
+        "sourceStepId": "KB-04-S1",
+        "order": 1,
+        "text": "Log into SAP GUI with SAP* administrator credentials."
+      },
+      {
+        "sourceStepId": "KB-04-S2",
+        "order": 2,
+        "text": "Run transaction code SLICENSE and import renewed license key file."
+      }
+    ],
+    "validation": "Transaction SLICENSE shows valid status with future expiration date.",
+    "escalationCondition": "Escalate to IT Procurement if renewed key file is invalid or missing.",
+    "keywords": ["LIC-902", "SAP", "SLICENSE", "license expired", "ERP"],
+    "version": "1.0"
+  },
+  {
+    "articleId": "KB-05",
+    "title": "Outlook Search Indexing Failure & Missing Emails",
+    "category": "Workplace Tools",
+    "subcategory": "Email & Office",
+    "symptoms": ["Outlook search not working", "Recent emails not found in search", "Indexing paused"],
+    "possibleCause": "Corrupted Windows Search Index catalog file.",
+    "prerequisites": ["Close Microsoft Outlook completely before troubleshooting."],
+    "steps": [
+      {
+        "sourceStepId": "KB-05-S1",
+        "order": 1,
+        "text": "Open Control Panel -> Indexing Options -> Advanced."
+      },
+      {
+        "sourceStepId": "KB-05-S2",
+        "order": 2,
+        "text": "Click 'Rebuild' under Index Settings and confirm prompt."
+      }
+    ],
+    "validation": "Outlook search status reports 'Indexing Complete'.",
+    "escalationCondition": "Escalate to Desktop Support if rebuild option is grayed out.",
+    "keywords": ["Outlook", "indexing", "search", "email", "Windows Search"],
+    "version": "1.0"
+  }
+]

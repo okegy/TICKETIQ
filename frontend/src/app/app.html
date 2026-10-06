@@ -1,0 +1,114 @@
+<div class="app-container">
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <span class="icon">🛡️</span>
+      <div>
+        <h1>TicketIQ</h1>
+        <p class="tagline">Evidence-Gated IT Support Copilot</p>
+      </div>
+    </div>
+    <div class="badge-status">
+      <span class="pulse"></span> System Operational
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <div class="grid-layout">
+    <!-- Left Column: Input Form -->
+    <div class="card input-card">
+      <h2>📥 Paste IT Ticket</h2>
+      
+      <div class="sample-buttons">
+        <button type="button" class="btn-sample" (click)="loadSampleTicket('payroll')">Payroll Auth Error</button>
+        <button type="button" class="btn-sample" (click)="loadSampleTicket('vpn')">VPN Timeout</button>
+        <button type="button" class="btn-sample" (click)="loadSampleTicket('unmatched')">Unmatched Query</button>
+      </div>
+
+      <div class="form-group">
+        <label>Ticket Description (Raw Unstructured Text):</label>
+        <textarea [(ngModel)]="ticketInput" rows="6" placeholder="Paste ticket description here..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Application Name:</label>
+          <input type="text" [(ngModel)]="applicationName" placeholder="e.g. Payroll Portal">
+        </div>
+        <div class="form-group flex-1">
+          <label>Confidence Threshold: {{ confidenceThreshold }}</label>
+          <input type="range" min="0.1" max="0.9" step="0.05" [(ngModel)]="confidenceThreshold">
+        </div>
+      </div>
+
+      <button class="btn-primary" [disabled]="loading" (click)="analyzeTicket()">
+        <span *ngIf="!loading">🔍 Analyze Ticket & Retrieve Resolution</span>
+        <span *ngIf="loading">⚡ Processing & Redacting PII...</span>
+      </button>
+
+      <div *ngIf="errorMessage" class="alert alert-error">
+        ⚠️ {{ errorMessage }}
+      </div>
+    </div>
+
+    <!-- Right Column: Results & Grounding -->
+    <div class="card results-card">
+      <h2>🎯 Decision & Evidence Grounding</h2>
+
+      <div *ngIf="!analysisResult && !loading" class="empty-state">
+        <span>📋</span>
+        <p>Paste a ticket on the left and click <strong>Analyze</strong> to view predicted category, PII redactions, and source-grounded resolution steps.</p>
+      </div>
+
+      <div *ngIf="analysisResult" class="results-content">
+        <!-- Decision Banner -->
+        <div class="decision-banner" [ngClass]="{'banner-allowed': analysisResult.decision === 'DRAFT_ALLOWED', 'banner-nomatch': analysisResult.decision === 'NO_RELIABLE_MATCH'}">
+          <span class="decision-icon">{{ analysisResult.decision === 'DRAFT_ALLOWED' ? '✅' : '🚫' }}</span>
+          <div>
+            <h3>Status: {{ analysisResult.decision }}</h3>
+            <p *ngIf="analysisResult.decision === 'DRAFT_ALLOWED'">Evidence confidence meets threshold ({{ analysisResult.confidence.finalScore * 100 }}%).</p>
+            <p *ngIf="analysisResult.decision === 'NO_RELIABLE_MATCH'">No reliable knowledge base article matched the criteria. Refusing to invent fix.</p>
+          </div>
+        </div>
+
+        <!-- Redacted Text View -->
+        <div class="section-box">
+          <h4>🔒 Sanitized Text (PII Redacted)</h4>
+          <div class="redacted-box">{{ analysisResult.redactedText }}</div>
+        </div>
+
+        <div *ngIf="analysisResult.decision === 'DRAFT_ALLOWED'">
+          <!-- Classification Info -->
+          <div class="info-chips">
+            <span class="chip">📁 Category: <strong>{{ analysisResult.classification.category }}</strong></span>
+            <span class="chip">🏷️ Subcategory: <strong>{{ analysisResult.classification.subcategory }}</strong></span>
+            <span class="chip">🎯 Confidence: <strong>{{ analysisResult.classification.confidence * 100 }}%</strong></span>
+          </div>
+
+          <!-- Resolution Steps -->
+          <div class="section-box">
+            <h4>💡 Source-Grounded Resolution Steps</h4>
+            <div class="steps-list">
+              <div *ngFor="let step of analysisResult.resolutionSteps" class="step-card">
+                <div class="step-num">{{ step.stepNumber }}</div>
+                <div class="step-body">
+                  <p class="step-text">{{ step.instruction }}</p>
+                  <div class="step-meta">
+                    <span class="tag-source">📖 Source: {{ step.sourceArticleId }} ({{ step.sourceSection }})</span>
+                    <span class="tag-verified">✔ {{ step.verificationStatus }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Escalation Notice -->
+          <div *ngIf="analysisResult.escalation.required" class="alert alert-warning">
+            🚨 <strong>Escalation Rule Triggered:</strong> {{ analysisResult.escalation.condition }}
+            <br><small>Source: {{ analysisResult.escalation.sourceArticleId }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

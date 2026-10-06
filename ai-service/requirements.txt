@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+scikit-learn
+numpy
+pandas
+regex
+python-multipart
+pytest
+httpx
